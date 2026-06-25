@@ -1,0 +1,17 @@
+services:
+  app:
+    build: .
+    image: sistem-santri:latest
+    container_name: sistem-santri
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=file:/app/data/prod.db
+      - AUTH_SECRET=${AUTH_SECRET}
+    volumes:
+      - santri_data:/app/data
+
+volumes:
+  santri_data:

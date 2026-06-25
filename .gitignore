@@ -1,0 +1,10 @@
+node_modules
+.next
+.env
+*.log
+dev.db
+dev.db-shm
+dev.db-wal
+drizzle/
+.DS_Store
+next-env.d.ts

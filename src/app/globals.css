@@ -1,0 +1,77 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --paper: #faf6ec;
+  --paper-dark: #f1ead7;
+}
+
+body {
+  background-color: var(--paper);
+  color: #1c2b26;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Tekstur halus ala kertas/parchment */
+.bg-arabesque {
+  background-color: #0a4733;
+  background-image:
+    radial-gradient(circle at 25% 25%, rgba(217, 184, 120, 0.08) 0%, transparent 40%),
+    radial-gradient(circle at 75% 75%, rgba(217, 184, 120, 0.06) 0%, transparent 40%);
+}
+
+.card {
+  background: #ffffff;
+  border: 1px solid #ece3cf;
+  border-radius: 0.85rem;
+  box-shadow: 0 1px 2px rgba(28, 43, 38, 0.04), 0 8px 24px -16px rgba(28, 43, 38, 0.18);
+}
+
+.input-field {
+  width: 100%;
+  border: 1px solid #d9cdb0;
+  border-radius: 0.55rem;
+  padding: 0.55rem 0.75rem;
+  background: #fffdf8;
+  font-size: 0.9rem;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  outline: none;
+}
+.input-field:focus {
+  border-color: #0e5c43;
+  box-shadow: 0 0 0 3px rgba(14, 92, 67, 0.12);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  font-weight: 600;
+  border-radius: 0.6rem;
+  padding: 0.6rem 1rem;
+  font-size: 0.875rem;
+  transition: all 0.15s;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+.btn-primary { background: #0e5c43; color: #fff; }
+.btn-primary:hover { background: #0a4733; }
+.btn-gold { background: #b8893f; color: #fff; }
+.btn-gold:hover { background: #8c651f; }
+.btn-ghost { background: transparent; color: #0a4733; border-color: #d9cdb0; }
+.btn-ghost:hover { background: #f1ead7; }
+.btn-danger { background: #fff; color: #b42318; border-color: #f0c3bd; }
+.btn-danger:hover { background: #fef3f2; }
+
+.label { font-size: 0.78rem; font-weight: 600; color: #5a5443; margin-bottom: 0.3rem; display: block; letter-spacing: 0.01em; }
+
+.scrollbar-thin::-webkit-scrollbar { height: 8px; width: 8px; }
+.scrollbar-thin::-webkit-scrollbar-thumb { background: #d9cdb0; border-radius: 8px; }
+
+@media print {
+  .no-print { display: none !important; }
+  body { background: #fff; }
+  .card { box-shadow: none; border: 1px solid #ccc; }
+}

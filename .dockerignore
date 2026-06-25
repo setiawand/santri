@@ -1,0 +1,12 @@
+node_modules
+.next
+.env
+dev.db
+dev.db-shm
+dev.db-wal
+drizzle/
+.DS_Store
+*.log
+.git
+.gitignore
+README.md
