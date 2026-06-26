@@ -23,7 +23,6 @@ RUN addgroup --system --gid 1001 nodejs \
 
 # Salin hasil build dan dependency
 COPY --from=builder --chown=nextjs:nodejs /app/.next ./.next
-COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules ./node_modules
 COPY --from=builder --chown=nextjs:nodejs /app/package.json ./
 
