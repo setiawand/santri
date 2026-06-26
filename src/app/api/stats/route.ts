@@ -5,6 +5,7 @@ import { santri, setoran, pembayaran } from "@/db/schema";
 import { tahunAjaranSekarang } from "@/lib/utils";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 export async function GET() {
   const periode = tahunAjaranSekarang();

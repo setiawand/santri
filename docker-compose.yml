@@ -1,7 +1,6 @@
 services:
   app:
     build: .
-    image: sistem-santri:latest
     container_name: sistem-santri
     restart: unless-stopped
     ports:
