@@ -5,7 +5,7 @@ services:
     container_name: sistem-santri
     restart: unless-stopped
     ports:
-      - "3000:3000"
+      - "${APP_PORT:-3000}:3000"
     environment:
       - NODE_ENV=production
       - DATABASE_URL=file:/app/data/prod.db
