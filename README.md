@@ -49,6 +49,7 @@ Buka http://localhost:3000
 |-------|-------|-----------|
 | Admin | `admin@markazquran.id` | `admin123` |
 | Guru  | `guru@markazquran.id`  | `guru123`  |
+| Orang Tua | `ortu@markazquran.id` | `ortu123` |
 
 > Ganti kata sandi & `AUTH_SECRET` sebelum dipakai sungguhan.
 

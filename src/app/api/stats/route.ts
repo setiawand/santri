@@ -3,11 +3,17 @@ import { and, count, eq, gte, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { santri, setoran, pembayaran } from "@/db/schema";
 import { tahunAjaranSekarang } from "@/lib/utils";
+import { getSession } from "@/lib/session";
+import { isStaff } from "@/lib/authz";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET() {
+  const session = await getSession();
+  if (!isStaff(session)) {
+    return NextResponse.json({ error: "Tidak diizinkan" }, { status: 403 });
+  }
   const periode = tahunAjaranSekarang();
   const bulanIdx = new Date().getMonth();
   const BULAN = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];

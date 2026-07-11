@@ -34,6 +34,24 @@ async function main() {
     })
     .onConflictDoNothing({ target: user.email });
 
+  const ortuPass = await bcrypt.hash("ortu123", 10);
+  await db
+    .insert(user)
+    .values({
+      nama: "Bapak Dzaki",
+      email: "ortu@markazquran.id",
+      password: ortuPass,
+      role: "ortu",
+    })
+    .onConflictDoNothing({ target: user.email });
+
+  const guruUser = await db.query.user.findFirst({
+    where: eq(user.email, "guru@markazquran.id"),
+  });
+  const ortuUser = await db.query.user.findFirst({
+    where: eq(user.email, "ortu@markazquran.id"),
+  });
+
   console.log("Menambahkan contoh santri...");
   const existing = await db.query.santri.findFirst({
     where: eq(santri.nama, "Raffasha Dzaki"),
@@ -58,6 +76,8 @@ async function main() {
         pekerjaanIbu: "Ibu Rumah Tangga",
         programBelajar: "Tahsin & Tilawah",
         waktuBelajar: "Sore (16.00 - 17.30)",
+        pembimbingId: guruUser?.id ?? null,
+        orangtuaUserId: ortuUser?.id ?? null,
       })
       .returning();
 
@@ -90,6 +110,7 @@ async function main() {
   console.log("Seed selesai.");
   console.log("Login admin : admin@markazquran.id / admin123");
   console.log("Login guru  : guru@markazquran.id / guru123");
+  console.log("Login ortu  : ortu@markazquran.id / ortu123");
 }
 
 main().catch((e) => {

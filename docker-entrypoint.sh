@@ -10,7 +10,9 @@ if [ ! -f "$DB_FILE" ]; then
   npx tsx src/db/seed.ts
   echo "[entrypoint] Database siap. Segera ganti password default admin/guru setelah login pertama."
 else
-  echo "[entrypoint] Database ditemukan: $DB_FILE"
+  echo "[entrypoint] Database ditemukan: $DB_FILE, menyinkronkan skema..."
+  # Terapkan perubahan skema aditif (kolom/tabel baru) ke database yang sudah ada.
+  npx drizzle-kit push
 fi
 
 exec npx next start

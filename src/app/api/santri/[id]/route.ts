@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { santri } from "@/db/schema";
+import { getSession } from "@/lib/session";
+import { canViewSantri, isStaff } from "@/lib/authz";
 
 export const runtime = "nodejs";
 
@@ -12,11 +14,17 @@ function parseTanggal(v: unknown): Date | null {
 }
 
 export async function GET(_req: Request, { params }: { params: { id: string } }) {
+  const session = await getSession();
+  if (!(await canViewSantri(session, params.id))) {
+    return NextResponse.json({ error: "Santri tidak ditemukan" }, { status: 404 });
+  }
   const found = await db.query.santri.findFirst({
     where: eq(santri.id, params.id),
     with: {
       setoran: { orderBy: (t, { desc }) => [desc(t.tanggal)] },
       pembayaran: { orderBy: (t, { asc }) => [asc(t.updatedAt)] },
+      pembimbing: { columns: { id: true, nama: true } },
+      orangtua: { columns: { id: true, nama: true, email: true } },
     },
   });
   if (!found) return NextResponse.json({ error: "Santri tidak ditemukan" }, { status: 404 });
@@ -24,6 +32,10 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
 }
 
 export async function PUT(req: Request, { params }: { params: { id: string } }) {
+  const session = await getSession();
+  if (!isStaff(session)) {
+    return NextResponse.json({ error: "Tidak diizinkan" }, { status: 403 });
+  }
   try {
     const b = await req.json();
     const [updated] = await db
@@ -44,6 +56,7 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
         pekerjaanIbu: b.pekerjaanIbu || null,
         programBelajar: b.programBelajar || null,
         waktuBelajar: b.waktuBelajar || null,
+        pembimbingId: b.pembimbingId || null,
         status: b.status || "aktif",
       })
       .where(eq(santri.id, params.id))
@@ -59,6 +72,10 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
 }
 
 export async function DELETE(_req: Request, { params }: { params: { id: string } }) {
+  const session = await getSession();
+  if (!isStaff(session)) {
+    return NextResponse.json({ error: "Tidak diizinkan" }, { status: 403 });
+  }
   await db.delete(santri).where(eq(santri.id, params.id));
   return NextResponse.json({ ok: true });
 }

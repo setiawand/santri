@@ -28,7 +28,8 @@ export default function LoginPage() {
         setLoading(false);
         return;
       }
-      router.replace("/dashboard");
+      // Orang tua langsung diarahkan ke halaman anaknya, staf ke dashboard.
+      router.replace(data.user?.role === "ortu" ? "/santri" : "/dashboard");
       router.refresh();
     } catch {
       setError("Tidak dapat terhubung ke server");
@@ -114,6 +115,7 @@ export default function LoginPage() {
             <p className="font-semibold text-stone-500 mb-1">Akun demo:</p>
             <p>admin@markazquran.id / admin123</p>
             <p>guru@markazquran.id / guru123</p>
+            <p>ortu@markazquran.id / ortu123</p>
           </div>
         </div>
       </div>

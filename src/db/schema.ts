@@ -9,7 +9,7 @@ export const user = sqliteTable("User", {
   nama: text("nama").notNull(),
   email: text("email").notNull().unique(),
   password: text("password").notNull(),
-  role: text("role").notNull().default("guru"), // "admin" | "guru"
+  role: text("role").notNull().default("guru"), // "admin" | "guru" | "ortu"
   createdAt: integer("createdAt", { mode: "timestamp" })
     .notNull()
     .$defaultFn(() => new Date()),
@@ -34,6 +34,10 @@ export const santri = sqliteTable("Santri", {
   // Program
   programBelajar: text("programBelajar"),
   waktuBelajar: text("waktuBelajar"),
+  // Guru pembimbing santri ini
+  pembimbingId: text("pembimbingId").references(() => user.id, { onDelete: "set null" }),
+  // Akun login orang tua (User dengan role "ortu")
+  orangtuaUserId: text("orangtuaUserId").references(() => user.id, { onDelete: "set null" }),
   status: text("status").notNull().default("aktif"), // "aktif" | "nonaktif"
   createdAt: integer("createdAt", { mode: "timestamp" })
     .notNull()
@@ -103,11 +107,23 @@ export const pembayaran = sqliteTable(
 export const userRelations = relations(user, ({ many }) => ({
   setoran: many(setoran),
   pembayaran: many(pembayaran),
+  santriBimbingan: many(santri, { relationName: "pembimbing" }),
+  anak: many(santri, { relationName: "orangtua" }),
 }));
 
-export const santriRelations = relations(santri, ({ many }) => ({
+export const santriRelations = relations(santri, ({ one, many }) => ({
   setoran: many(setoran),
   pembayaran: many(pembayaran),
+  pembimbing: one(user, {
+    fields: [santri.pembimbingId],
+    references: [user.id],
+    relationName: "pembimbing",
+  }),
+  orangtua: one(user, {
+    fields: [santri.orangtuaUserId],
+    references: [user.id],
+    relationName: "orangtua",
+  }),
 }));
 
 export const setoranRelations = relations(setoran, ({ one }) => ({

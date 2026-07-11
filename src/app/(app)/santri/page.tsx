@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Plus, Search, Users, Loader2, ChevronRight } from "lucide-react";
+import { useMe } from "@/lib/useMe";
 
 interface SantriRow {
   id: string;
@@ -11,10 +12,13 @@ interface SantriRow {
   kelas: string | null;
   status: string;
   programBelajar: string | null;
+  pembimbingNama: string | null;
   _count: { setoran: number; pembayaran: number };
 }
 
 export default function SantriListPage() {
+  const me = useMe();
+  const isOrtu = me?.role === "ortu";
   const [santri, setSantri] = useState<SantriRow[]>([]);
   const [q, setQ] = useState("");
   const [loading, setLoading] = useState(true);
@@ -40,23 +44,29 @@ export default function SantriListPage() {
     <div className="p-5 sm:p-8 max-w-6xl mx-auto">
       <header className="flex flex-wrap items-center justify-between gap-4 mb-6">
         <div>
-          <h1 className="font-serif text-3xl text-ink">Data Santri</h1>
-          <p className="text-stone-500">{santri.length} santri terdaftar.</p>
+          <h1 className="font-serif text-3xl text-ink">{isOrtu ? "Anak Saya" : "Data Santri"}</h1>
+          <p className="text-stone-500">
+            {isOrtu ? `${santri.length} anak tertaut dengan akun Anda.` : `${santri.length} santri terdaftar.`}
+          </p>
         </div>
-        <Link href="/santri/baru" className="btn btn-primary">
-          <Plus size={18} /> Daftarkan Santri
-        </Link>
+        {!isOrtu && (
+          <Link href="/santri/baru" className="btn btn-primary">
+            <Plus size={18} /> Daftarkan Santri
+          </Link>
+        )}
       </header>
 
-      <div className="relative mb-5 max-w-md">
-        <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
-        <input
-          className="input-field pl-10"
-          placeholder="Cari nama, NIS, atau kelas..."
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-        />
-      </div>
+      {!isOrtu && (
+        <div className="relative mb-5 max-w-md">
+          <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
+          <input
+            className="input-field pl-10"
+            placeholder="Cari nama, NIS, atau kelas..."
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+          />
+        </div>
+      )}
 
       {loading ? (
         <div className="flex items-center justify-center h-48 text-stone-400">
@@ -65,7 +75,11 @@ export default function SantriListPage() {
       ) : santri.length === 0 ? (
         <div className="card p-12 text-center">
           <Users size={40} className="mx-auto text-stone-300 mb-3" />
-          <p className="text-stone-500">Belum ada santri. Mulai dengan mendaftarkan santri baru.</p>
+          <p className="text-stone-500">
+            {isOrtu
+              ? "Belum ada santri yang tertaut dengan akun Anda. Hubungi pihak Markaz Qur'an."
+              : "Belum ada santri. Mulai dengan mendaftarkan santri baru."}
+          </p>
         </div>
       ) : (
         <div className="card overflow-hidden">
@@ -77,6 +91,7 @@ export default function SantriListPage() {
                   <th className="px-4 py-3 font-semibold">NIS</th>
                   <th className="px-4 py-3 font-semibold">Kelas</th>
                   <th className="px-4 py-3 font-semibold">Program</th>
+                  <th className="px-4 py-3 font-semibold">Pembimbing</th>
                   <th className="px-4 py-3 font-semibold text-center">Setoran</th>
                   <th className="px-4 py-3 font-semibold text-center">Status</th>
                   <th className="px-4 py-3" />
@@ -93,6 +108,7 @@ export default function SantriListPage() {
                     <td className="px-4 py-3 text-stone-500">{s.nis || "-"}</td>
                     <td className="px-4 py-3 text-stone-500">{s.kelas || "-"}</td>
                     <td className="px-4 py-3 text-stone-500">{s.programBelajar || "-"}</td>
+                    <td className="px-4 py-3 text-stone-500">{s.pembimbingNama || "-"}</td>
                     <td className="px-4 py-3 text-center text-stone-500">{s._count.setoran}</td>
                     <td className="px-4 py-3 text-center">
                       <span

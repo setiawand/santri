@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Loader2, Check, X, Wallet } from "lucide-react";
-import { formatRupiah } from "@/lib/utils";
+import { formatRupiah, formatRibuan, parseRibuan, formatTanggalSingkat } from "@/lib/utils";
 
 interface Bayar {
   id: string;
@@ -13,11 +13,13 @@ interface Bayar {
   paraf: boolean;
 }
 
-export function PembayaranPanel({ santriId }: { santriId: string }) {
+export function PembayaranPanel({ santriId, role = "guru" }: { santriId: string; role?: string }) {
   const [rows, setRows] = useState<Bayar[]>([]);
   const [periode, setPeriode] = useState<string>("");
   const [periodeList, setPeriodeList] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+  // Ortu hanya melihat kartu pembayaran anaknya, tanpa bisa mengubah.
+  const readOnly = role === "ortu";
 
   async function load(p?: string) {
     setLoading(true);
@@ -66,6 +68,10 @@ export function PembayaranPanel({ santriId }: { santriId: string }) {
 
       {loading ? (
         <div className="flex items-center justify-center h-32 text-stone-400"><Loader2 className="animate-spin mr-2" /> Memuat...</div>
+      ) : rows.length === 0 ? (
+        <div className="text-center py-10 text-stone-400">
+          Belum ada catatan pembayaran untuk tahun ajaran ini.
+        </div>
       ) : (
         <>
           <div className="overflow-x-auto scrollbar-thin">
@@ -85,45 +91,68 @@ export function PembayaranPanel({ santriId }: { santriId: string }) {
                   <tr key={b.id} className={b.paraf ? "bg-emerald-50/60" : "odd:bg-white even:bg-cream/40"}>
                     <td className="px-3 py-1.5 border border-cream-dark text-stone-500">{i + 1}</td>
                     <td className="px-3 py-1.5 border border-cream-dark font-medium text-ink">{b.bulan}</td>
-                    <td className="px-2 py-1 border border-cream-dark">
-                      <input
-                        type="date"
-                        className="input-field py-1 text-xs"
-                        value={b.tanggal ? b.tanggal.slice(0, 10) : ""}
-                        onChange={(e) => setLocal(b.id, { tanggal: e.target.value })}
-                        onBlur={(e) => save(b.id, { tanggal: e.target.value })}
-                      />
-                    </td>
-                    <td className="px-2 py-1 border border-cream-dark">
-                      <input
-                        type="number"
-                        min={0}
-                        className="input-field py-1 text-right"
-                        value={b.iuran || ""}
-                        onChange={(e) => setLocal(b.id, { iuran: parseInt(e.target.value) || 0 })}
-                        onBlur={(e) => save(b.id, { iuran: parseInt(e.target.value) || 0 })}
-                      />
-                    </td>
-                    <td className="px-2 py-1 border border-cream-dark">
-                      <input
-                        type="number"
-                        min={0}
-                        className="input-field py-1 text-right"
-                        value={b.infaq || ""}
-                        onChange={(e) => setLocal(b.id, { infaq: parseInt(e.target.value) || 0 })}
-                        onBlur={(e) => save(b.id, { infaq: parseInt(e.target.value) || 0 })}
-                      />
-                    </td>
-                    <td className="px-3 py-1.5 border border-cream-dark text-center">
-                      <button
-                        onClick={() => { const nv = !b.paraf; setLocal(b.id, { paraf: nv }); save(b.id, { paraf: nv }); }}
-                        className={`h-6 w-6 rounded-full inline-flex items-center justify-center transition ${
-                          b.paraf ? "bg-emerald text-white" : "bg-stone-100 text-stone-300 hover:bg-stone-200"
-                        }`}
-                      >
-                        {b.paraf ? <Check size={14} /> : <X size={14} />}
-                      </button>
-                    </td>
+                    {readOnly ? (
+                      <>
+                        <td className="px-3 py-1.5 border border-cream-dark whitespace-nowrap">
+                          {b.tanggal ? formatTanggalSingkat(b.tanggal) : "-"}
+                        </td>
+                        <td className="px-3 py-1.5 border border-cream-dark text-right">{formatRibuan(b.iuran) || "-"}</td>
+                        <td className="px-3 py-1.5 border border-cream-dark text-right">{formatRibuan(b.infaq) || "-"}</td>
+                        <td className="px-3 py-1.5 border border-cream-dark text-center">
+                          <span
+                            className={`h-6 w-6 rounded-full inline-flex items-center justify-center ${
+                              b.paraf ? "bg-emerald text-white" : "bg-stone-100 text-stone-300"
+                            }`}
+                          >
+                            {b.paraf ? <Check size={14} /> : <X size={14} />}
+                          </span>
+                        </td>
+                      </>
+                    ) : (
+                      <>
+                        <td className="px-2 py-1 border border-cream-dark">
+                          <input
+                            type="date"
+                            className="input-field py-1 text-xs"
+                            value={b.tanggal ? b.tanggal.slice(0, 10) : ""}
+                            onChange={(e) => setLocal(b.id, { tanggal: e.target.value })}
+                            onBlur={(e) => save(b.id, { tanggal: e.target.value })}
+                          />
+                        </td>
+                        <td className="px-2 py-1 border border-cream-dark">
+                          <input
+                            type="text"
+                            inputMode="numeric"
+                            className="input-field py-1 text-right"
+                            placeholder="0"
+                            value={formatRibuan(b.iuran)}
+                            onChange={(e) => setLocal(b.id, { iuran: parseRibuan(e.target.value) })}
+                            onBlur={(e) => save(b.id, { iuran: parseRibuan(e.target.value) })}
+                          />
+                        </td>
+                        <td className="px-2 py-1 border border-cream-dark">
+                          <input
+                            type="text"
+                            inputMode="numeric"
+                            className="input-field py-1 text-right"
+                            placeholder="0"
+                            value={formatRibuan(b.infaq)}
+                            onChange={(e) => setLocal(b.id, { infaq: parseRibuan(e.target.value) })}
+                            onBlur={(e) => save(b.id, { infaq: parseRibuan(e.target.value) })}
+                          />
+                        </td>
+                        <td className="px-3 py-1.5 border border-cream-dark text-center">
+                          <button
+                            onClick={() => { const nv = !b.paraf; setLocal(b.id, { paraf: nv }); save(b.id, { paraf: nv }); }}
+                            className={`h-6 w-6 rounded-full inline-flex items-center justify-center transition ${
+                              b.paraf ? "bg-emerald text-white" : "bg-stone-100 text-stone-300 hover:bg-stone-200"
+                            }`}
+                          >
+                            {b.paraf ? <Check size={14} /> : <X size={14} />}
+                          </button>
+                        </td>
+                      </>
+                    )}
                   </tr>
                 ))}
               </tbody>
@@ -138,7 +167,8 @@ export function PembayaranPanel({ santriId }: { santriId: string }) {
             </table>
           </div>
           <p className="text-xs text-stone-400 mt-3 flex items-center gap-1.5">
-            <Wallet size={13} /> Perubahan tersimpan otomatis. Total pemasukan tahun ajaran ini:{" "}
+            <Wallet size={13} />{" "}
+            {readOnly ? "Total pembayaran tahun ajaran ini:" : "Perubahan tersimpan otomatis. Total pemasukan tahun ajaran ini:"}{" "}
             <span className="font-semibold text-emerald">{formatRupiah(totalIuran + totalInfaq)}</span>
           </p>
         </>
