@@ -3,14 +3,20 @@ import { and, desc, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { pembayaran } from "@/db/schema";
 import { BULAN_AJARAN, tahunAjaranSekarang } from "@/lib/utils";
+import { getSession } from "@/lib/session";
+import { canViewSantri, isStaff } from "@/lib/authz";
 
 export const runtime = "nodejs";
 
 export async function GET(req: Request) {
+  const session = await getSession();
   const { searchParams } = new URL(req.url);
   const santriId = searchParams.get("santriId");
   const periode = searchParams.get("periode") || tahunAjaranSekarang();
   if (!santriId) return NextResponse.json({ error: "santriId wajib" }, { status: 400 });
+  if (!(await canViewSantri(session, santriId))) {
+    return NextResponse.json({ error: "Tidak diizinkan" }, { status: 403 });
+  }
 
   let rows = await db
     .select()
@@ -18,7 +24,8 @@ export async function GET(req: Request) {
     .where(and(eq(pembayaran.santriId, santriId), eq(pembayaran.periode, periode)));
 
   // Auto-generate 12 baris bulan jika periode ini belum ada (satu bulk insert).
-  if (rows.length === 0) {
+  // Hanya staf yang memicu pembuatan baris; ortu cukup melihat yang sudah ada.
+  if (rows.length === 0 && isStaff(session)) {
     await db
       .insert(pembayaran)
       .values(BULAN_AJARAN.map((bulan) => ({ santriId, periode, bulan })));

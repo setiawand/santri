@@ -22,9 +22,18 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // Sudah login tapi membuka halaman login -> arahkan ke dashboard.
+  // Sudah login tapi membuka halaman login -> arahkan ke halaman utama sesuai role.
   if (isLoginPage) {
-    return NextResponse.redirect(new URL("/dashboard", req.url));
+    const home = session.role === "ortu" ? "/santri" : "/dashboard";
+    return NextResponse.redirect(new URL(home, req.url));
+  }
+
+  // Orang tua tidak punya dashboard staf dan tidak bisa mendaftarkan santri.
+  if (
+    session.role === "ortu" &&
+    (pathname === "/dashboard" || pathname === "/santri/baru" || pathname === "/")
+  ) {
+    return NextResponse.redirect(new URL("/santri", req.url));
   }
 
   return NextResponse.next();

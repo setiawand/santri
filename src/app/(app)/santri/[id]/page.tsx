@@ -9,16 +9,21 @@ import {
 import { SetoranPanel } from "@/components/SetoranPanel";
 import { PembayaranPanel } from "@/components/PembayaranPanel";
 import { SantriForm, type SantriData } from "@/components/SantriForm";
+import { OrtuAkunCard } from "@/components/OrtuAkunCard";
 import { formatTanggal } from "@/lib/utils";
+import { useMe } from "@/lib/useMe";
 
 type Tab = "profil" | "setoran" | "pembayaran" | "edit";
 
 export default function SantriDetailPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
+  const me = useMe();
   const [santri, setSantri] = useState<SantriData | null>(null);
   const [tab, setTab] = useState<Tab>("profil");
   const [notFound, setNotFound] = useState(false);
+  const isOrtu = me?.role === "ortu";
+  const isStaf = !!me && !isOrtu;
 
   async function load() {
     const res = await fetch(`/api/santri/${params.id}`);
@@ -55,7 +60,7 @@ export default function SantriDetailPage() {
   return (
     <div className="p-5 sm:p-8 max-w-5xl mx-auto">
       <Link href="/santri" className="inline-flex items-center gap-1 text-sm text-stone-500 hover:text-emerald mb-4 no-print">
-        <ChevronLeft size={16} /> Daftar Santri
+        <ChevronLeft size={16} /> {isOrtu ? "Anak Saya" : "Daftar Santri"}
       </Link>
 
       {/* Header */}
@@ -80,12 +85,16 @@ export default function SantriDetailPage() {
             <button onClick={() => window.print()} className="btn btn-ghost border-white/30 text-white hover:bg-white/10">
               <Printer size={16} /> Cetak
             </button>
-            <button onClick={() => setTab("edit")} className="btn btn-gold">
-              <Pencil size={16} /> Edit
-            </button>
-            <button onClick={hapus} className="btn btn-danger">
-              <Trash2 size={16} />
-            </button>
+            {isStaf && (
+              <>
+                <button onClick={() => setTab("edit")} className="btn btn-gold">
+                  <Pencil size={16} /> Edit
+                </button>
+                <button onClick={hapus} className="btn btn-danger">
+                  <Trash2 size={16} />
+                </button>
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -112,10 +121,19 @@ export default function SantriDetailPage() {
       )}
 
       {/* Content */}
-      {tab === "profil" && <Profil santri={santri} />}
-      {tab === "setoran" && <SetoranPanel santriId={params.id} />}
-      {tab === "pembayaran" && <PembayaranPanel santriId={params.id} />}
-      {tab === "edit" && (
+      {tab === "profil" && (
+        <Profil
+          santri={santri}
+          akunOrtuCard={
+            isStaf ? (
+              <OrtuAkunCard santriId={params.id} orangtua={santri.orangtua} onChanged={load} />
+            ) : null
+          }
+        />
+      )}
+      {tab === "setoran" && <SetoranPanel santriId={params.id} role={me?.role} />}
+      {tab === "pembayaran" && <PembayaranPanel santriId={params.id} role={me?.role} />}
+      {tab === "edit" && isStaf && (
         <div>
           <div className="flex items-center justify-between mb-4 no-print">
             <h2 className="font-serif text-2xl text-ink">Edit Data Santri</h2>
@@ -128,7 +146,7 @@ export default function SantriDetailPage() {
   );
 }
 
-function Profil({ santri }: { santri: SantriData }) {
+function Profil({ santri, akunOrtuCard }: { santri: SantriData; akunOrtuCard?: React.ReactNode }) {
   const Row = ({ icon: Icon, label, value }: { icon?: any; label: string; value?: string | null }) => (
     <div className="flex items-start gap-3 py-2.5 border-b border-cream-dark last:border-0">
       {Icon && <Icon size={16} className="text-gold-dark mt-0.5 shrink-0" />}
@@ -148,6 +166,7 @@ function Profil({ santri }: { santri: SantriData }) {
         <Row icon={MapPin} label="Alamat" value={santri.alamat} />
         <Row label="Program Belajar" value={santri.programBelajar} />
         <Row label="Waktu Belajar" value={santri.waktuBelajar} />
+        <Row icon={User} label="Pembimbing" value={santri.pembimbing?.nama} />
       </div>
       <div className="card p-6">
         <h3 className="font-serif text-lg text-ink mb-3">Data Orang Tua</h3>
@@ -158,6 +177,7 @@ function Profil({ santri }: { santri: SantriData }) {
         <Row icon={Phone} label="HP Ibu" value={santri.hpIbu} />
         <Row label="Pekerjaan Ibu" value={santri.pekerjaanIbu} />
       </div>
+      {akunOrtuCard}
     </div>
   );
 }

@@ -37,7 +37,9 @@ No test suite exists. Verify changes via `npm run build` (full type-check) and b
 
 ## Auth
 
-JWT stored in an httpOnly cookie. Two roles: `admin` and `guru` (stored as strings on `User`). The middleware protects all routes except `/api/auth/*` and static assets. Session payload is read server-side via `src/lib/session.ts`.
+JWT stored in an httpOnly cookie. Three roles (stored as strings on `User`): `admin`, `guru` (staff), and `ortu` (parent). The middleware protects all routes except `/api/auth/*` and static assets, and redirects `ortu` away from staff pages (`/dashboard`, `/santri/baru`). Session payload is read server-side via `src/lib/session.ts`; role/ownership checks used by API routes live in `src/lib/authz.ts`.
+
+Parents (`ortu`) are linked to students via `Santri.orangtuaUserId` (managed by staff through `/api/santri/[id]/ortu`). They only see their own children (the santri list is filtered server-side), get read-only setoran/pembayaran views, and may only toggle `parafOrtu` on their child's setoran. Each santri also has an optional `pembimbingId` pointing at a staff `User`.
 
 ## Database Notes
 

@@ -7,7 +7,7 @@ Mendigitalkan tiga formulir: **Pendaftaran Santri**, **Lembar Setoran Tilawah**,
 
 - **Next.js 14** (App Router) + **TypeScript** — frontend & backend dalam satu codebase
 - **Drizzle ORM** + **SQLite** (`better-sqlite3`) — driver sinkron, cepat untuk operasi massal (bulk insert/update)
-- **Autentikasi** JWT (cookie httpOnly) + bcrypt, dengan peran **admin** / **guru**
+- **Autentikasi** JWT (cookie httpOnly) + bcrypt, dengan peran **admin** / **guru** / **orang tua**
 - **Tailwind CSS**
 
 ## Fitur
@@ -18,6 +18,10 @@ Mendigitalkan tiga formulir: **Pendaftaran Santri**, **Lembar Setoran Tilawah**,
 | Setoran Tilawah | Catatan setoran per santri (jilid/halaman, surat/ayat, keterangan, paraf guru & orang tua) |
 | Pembayaran | Kartu iuran per tahun ajaran (12 bulan Juli–Juni), iuran + infaq, status lunas, total otomatis |
 | Dashboard | Statistik santri, setoran bulan ini, dan pemasukan |
+| Pembimbing | Setiap santri punya guru pembimbing sendiri |
+| Portal Orang Tua | Orang tua login untuk melihat setoran & pembayaran anaknya, dan membubuhkan paraf ortu |
+
+> **Buku panduan pengguna** (PDF, lengkap dengan tangkapan layar): [`docs/panduan-pengguna.pdf`](docs/panduan-pengguna.pdf)
 | Login multi-user | Banyak akun admin/guru, sesi aman |
 
 ## Cara Menjalankan (Lokal)
@@ -49,6 +53,7 @@ Buka http://localhost:3000
 |-------|-------|-----------|
 | Admin | `admin@markazquran.id` | `admin123` |
 | Guru  | `guru@markazquran.id`  | `guru123`  |
+| Orang Tua | `ortu@markazquran.id` | `ortu123` |
 
 > Ganti kata sandi & `AUTH_SECRET` sebelum dipakai sungguhan.
 

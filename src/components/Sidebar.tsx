@@ -13,15 +13,25 @@ import {
   BookOpenCheck,
 } from "lucide-react";
 
-const NAV = [
+const NAV_STAF = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/santri", label: "Data Santri", icon: Users },
 ];
+
+// Orang tua hanya melihat data anaknya sendiri.
+const NAV_ORTU = [{ href: "/santri", label: "Anak Saya", icon: Users }];
+
+const ROLE_LABEL: Record<string, string> = {
+  admin: "Admin",
+  guru: "Guru",
+  ortu: "Orang Tua",
+};
 
 export function Sidebar({ user }: { user: { nama: string; email: string; role: string } }) {
   const pathname = usePathname();
   const router = useRouter();
   const [open, setOpen] = useState(false);
+  const NAV = user.role === "ortu" ? NAV_ORTU : NAV_STAF;
 
   async function logout() {
     await fetch("/api/auth/logout", { method: "POST" });
@@ -70,7 +80,7 @@ export function Sidebar({ user }: { user: { nama: string; email: string; role: s
           </div>
           <div className="min-w-0">
             <p className="text-sm text-white truncate">{user.nama}</p>
-            <p className="text-[11px] text-cream-dark/60 capitalize">{user.role}</p>
+            <p className="text-[11px] text-cream-dark/60">{ROLE_LABEL[user.role] || user.role}</p>
           </div>
         </div>
         <button

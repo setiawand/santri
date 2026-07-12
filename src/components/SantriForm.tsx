@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, Save } from "lucide-react";
 
@@ -21,6 +21,9 @@ export interface SantriData {
   pekerjaanIbu?: string;
   programBelajar?: string;
   waktuBelajar?: string;
+  pembimbingId?: string | null;
+  pembimbing?: { id: string; nama: string } | null;
+  orangtua?: { id: string; nama: string; email: string } | null;
   status?: string;
 }
 
@@ -75,6 +78,14 @@ export function SantriForm({ initial }: { initial?: SantriData }) {
   });
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
+  const [pembimbingList, setPembimbingList] = useState<{ id: string; nama: string }[]>([]);
+
+  useEffect(() => {
+    fetch("/api/users")
+      .then((r) => (r.ok ? r.json() : { users: [] }))
+      .then((d) => setPembimbingList(d.users || []))
+      .catch(() => {});
+  }, []);
 
   function set<K extends keyof SantriData>(key: K, val: SantriData[K]) {
     setForm((f) => ({ ...f, [key]: val }));
@@ -143,6 +154,19 @@ export function SantriForm({ initial }: { initial?: SantriData }) {
       <Section title="Program Belajar">
         <TextField label="Program Belajar" value={v("programBelajar")} onChange={(x) => set("programBelajar", x)} placeholder="contoh: Tahsin & Tilawah" />
         <TextField label="Waktu Belajar" value={v("waktuBelajar")} onChange={(x) => set("waktuBelajar", x)} placeholder="contoh: Sore (16.00-17.30)" />
+        <div>
+          <label className="label">Pembimbing</label>
+          <select
+            className="input-field"
+            value={form.pembimbingId || ""}
+            onChange={(e) => set("pembimbingId", e.target.value || null)}
+          >
+            <option value="">— Belum ditentukan —</option>
+            {pembimbingList.map((p) => (
+              <option key={p.id} value={p.id}>{p.nama}</option>
+            ))}
+          </select>
+        </div>
       </Section>
 
       <div className="flex gap-3 justify-end">

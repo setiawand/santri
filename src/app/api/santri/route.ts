@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
-import { asc, like, or, sql, getTableColumns } from "drizzle-orm";
+import { and, asc, eq, like, or, sql, getTableColumns } from "drizzle-orm";
 import { db } from "@/db";
 import { santri } from "@/db/schema";
+import { getSession } from "@/lib/session";
+import { isOrtu, isStaff } from "@/lib/authz";
 
 export const runtime = "nodejs";
 
@@ -12,25 +14,29 @@ function parseTanggal(v: unknown): Date | null {
 }
 
 export async function GET(req: Request) {
+  const session = await getSession();
   const { searchParams } = new URL(req.url);
   const q = searchParams.get("q")?.trim();
+
+  const searchFilter = q
+    ? or(
+        like(santri.nama, `%${q}%`),
+        like(santri.nis, `%${q}%`),
+        like(santri.kelas, `%${q}%`)
+      )
+    : undefined;
+  // Orang tua hanya melihat anaknya sendiri.
+  const ortuFilter = isOrtu(session) ? eq(santri.orangtuaUserId, session!.uid) : undefined;
 
   const rows = await db
     .select({
       ...getTableColumns(santri),
+      pembimbingNama: sql<string | null>`(select "nama" from "User" where "User"."id" = "Santri"."pembimbingId")`,
       setoranCount: sql<number>`(select count(*) from "Setoran" where "Setoran"."santriId" = "Santri"."id")`,
       pembayaranCount: sql<number>`(select count(*) from "Pembayaran" where "Pembayaran"."santriId" = "Santri"."id")`,
     })
     .from(santri)
-    .where(
-      q
-        ? or(
-            like(santri.nama, `%${q}%`),
-            like(santri.nis, `%${q}%`),
-            like(santri.kelas, `%${q}%`)
-          )
-        : undefined
-    )
+    .where(and(searchFilter, ortuFilter))
     .orderBy(asc(santri.nama));
 
   const result = rows.map(({ setoranCount, pembayaranCount, ...s }) => ({
@@ -42,6 +48,10 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
+  const session = await getSession();
+  if (!isStaff(session)) {
+    return NextResponse.json({ error: "Tidak diizinkan" }, { status: 403 });
+  }
   try {
     const b = await req.json();
     if (!b.nama || !String(b.nama).trim()) {
@@ -65,6 +75,7 @@ export async function POST(req: Request) {
         pekerjaanIbu: b.pekerjaanIbu || null,
         programBelajar: b.programBelajar || null,
         waktuBelajar: b.waktuBelajar || null,
+        pembimbingId: b.pembimbingId || null,
         status: b.status || "aktif",
       })
       .returning();

@@ -25,12 +25,15 @@ const empty = {
   keterangan: "",
 };
 
-export function SetoranPanel({ santriId }: { santriId: string }) {
+export function SetoranPanel({ santriId, role = "guru" }: { santriId: string; role?: string }) {
   const [list, setList] = useState<Setoran[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState(empty);
   const [saving, setSaving] = useState(false);
+  // Ortu hanya bisa membubuhkan paraf ortu; staf bisa mengelola semuanya.
+  const isOrtu = role === "ortu";
+  const canEdit = !isOrtu;
 
   async function load() {
     setLoading(true);
@@ -74,12 +77,14 @@ export function SetoranPanel({ santriId }: { santriId: string }) {
     <div className="card p-5 sm:p-6">
       <div className="flex items-center justify-between mb-4 no-print">
         <h3 className="font-serif text-xl text-ink">Lembar Setoran Tilawah</h3>
-        <button className="btn btn-gold" onClick={() => setShowForm((v) => !v)}>
-          <Plus size={18} /> Tambah Setoran
-        </button>
+        {canEdit && (
+          <button className="btn btn-gold" onClick={() => setShowForm((v) => !v)}>
+            <Plus size={18} /> Tambah Setoran
+          </button>
+        )}
       </div>
 
-      {showForm && (
+      {canEdit && showForm && (
         <form onSubmit={add} className="bg-cream/70 border border-cream-dark rounded-xl p-4 mb-5 grid sm:grid-cols-3 gap-3 no-print">
           <div>
             <label className="label">Tanggal</label>
@@ -132,7 +137,7 @@ export function SetoranPanel({ santriId }: { santriId: string }) {
                 <th className="px-3 py-2 font-semibold border border-emerald-800">Keterangan</th>
                 <th className="px-3 py-2 font-semibold border border-emerald-800 text-center">Guru</th>
                 <th className="px-3 py-2 font-semibold border border-emerald-800 text-center">Ortu</th>
-                <th className="px-3 py-2 border border-emerald-800 no-print" />
+                {canEdit && <th className="px-3 py-2 border border-emerald-800 no-print" />}
               </tr>
             </thead>
             <tbody>
@@ -147,33 +152,49 @@ export function SetoranPanel({ santriId }: { santriId: string }) {
                   </td>
                   <td className="px-3 py-2 border border-cream-dark">{s.keterangan || "-"}</td>
                   <td className="px-3 py-2 border border-cream-dark text-center">
-                    <ParafBtn active={s.parafGuru} onClick={() => toggleParaf(s, "parafGuru")} />
+                    <ParafBtn active={s.parafGuru} disabled={!canEdit} onClick={() => toggleParaf(s, "parafGuru")} />
                   </td>
                   <td className="px-3 py-2 border border-cream-dark text-center">
                     <ParafBtn active={s.parafOrtu} onClick={() => toggleParaf(s, "parafOrtu")} />
                   </td>
-                  <td className="px-3 py-2 border border-cream-dark text-center no-print">
-                    <button onClick={() => hapus(s.id)} className="text-stone-300 hover:text-red-500">
-                      <Trash2 size={16} />
-                    </button>
-                  </td>
+                  {canEdit && (
+                    <td className="px-3 py-2 border border-cream-dark text-center no-print">
+                      <button onClick={() => hapus(s.id)} className="text-stone-300 hover:text-red-500">
+                        <Trash2 size={16} />
+                      </button>
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
       )}
+      {isOrtu && (
+        <p className="text-xs text-stone-400 mt-3">
+          Tekan tombol pada kolom &quot;Ortu&quot; untuk membubuhkan paraf setelah memeriksa setoran anak.
+        </p>
+      )}
     </div>
   );
 }
 
-function ParafBtn({ active, onClick }: { active: boolean; onClick: () => void }) {
+function ParafBtn({
+  active,
+  onClick,
+  disabled = false,
+}: {
+  active: boolean;
+  onClick: () => void;
+  disabled?: boolean;
+}) {
   return (
     <button
       onClick={onClick}
+      disabled={disabled}
       className={`h-6 w-6 rounded-full inline-flex items-center justify-center transition ${
-        active ? "bg-emerald text-white" : "bg-stone-100 text-stone-300 hover:bg-stone-200"
-      }`}
+        active ? "bg-emerald text-white" : "bg-stone-100 text-stone-300"
+      } ${disabled ? "cursor-default" : active ? "" : "hover:bg-stone-200"}`}
       title={active ? "Sudah diparaf" : "Belum diparaf"}
     >
       {active ? <Check size={14} /> : <X size={14} />}
