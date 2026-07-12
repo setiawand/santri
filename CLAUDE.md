@@ -27,8 +27,8 @@ No test suite exists. Verify changes via `npm run build` (full type-check) and b
 
 **Single Next.js 14 monorepo** — frontend and backend coexist.
 
-- `src/app/(app)/` — protected route group (requires JWT cookie). Contains `dashboard/`, `santri/` (list, new, `[id]` detail with tabs), and `laporan/` (staff-only reports: per-santri payments, monthly recap, active students).
-- `src/app/api/` — REST API routes: `auth/` (login/logout/me), `santri/`, `setoran/`, `pembayaran/`, `stats/`, `laporan/` (staff-only report data), `users/` (staff list for pembimbing select).
+- `src/app/(app)/` — protected route group (requires JWT cookie). Contains `dashboard/`, `santri/` (list, new, `[id]` detail with tabs), `laporan/` (staff-only reports: per-santri payments, monthly recap with expenses/saldo, active students), and `pengeluaran/` (staff-only monthly expense tracking).
+- `src/app/api/` — REST API routes: `auth/` (login/logout/me), `santri/`, `setoran/`, `pembayaran/`, `stats/`, `laporan/` (staff-only report data), `pengeluaran/` (staff-only expense CRUD), `users/` (staff list for pembimbing select).
 - `src/components/` — shared UI: `Sidebar`, `Logo`, `SantriForm`, `SetoranPanel`, `PembayaranPanel`.
 - `src/lib/` — `jwt.ts` (jose-based JWT + cookie name), `password.ts` (bcrypt), `session.ts` (server-side session helper), `utils.ts`.
 - `src/db/` — `schema.ts` (Drizzle table defs + relations), `index.ts` (better-sqlite3 client singleton, exported as `db`), `seed.ts`.

@@ -2,12 +2,12 @@
 // pembayaran-santri (kartu iuran satu santri), rekap-bulan (rekap pembayaran satu
 // bulan), dan santri-aktif (daftar santri aktif beserta ringkasannya).
 import { NextResponse } from "next/server";
-import { and, asc, desc, eq } from "drizzle-orm";
+import { and, asc, desc, eq, gte, lt } from "drizzle-orm";
 import { db } from "@/db";
-import { pembayaran, santri } from "@/db/schema";
+import { pembayaran, pengeluaran, santri } from "@/db/schema";
 import { getSession } from "@/lib/session";
 import { isStaff } from "@/lib/authz";
-import { BULAN_AJARAN, tahunAjaranSekarang, tahunKalenderBulan } from "@/lib/utils";
+import { BULAN_AJARAN, rentangBulan, tahunAjaranSekarang, tahunKalenderBulan } from "@/lib/utils";
 
 export const runtime = "nodejs";
 
@@ -104,12 +104,33 @@ export async function GET(req: Request) {
         metode: r.metode,
         lunas: r.paraf,
       }));
+
+    // Pengeluaran pada bulan kalender yang sama, untuk ringkasan saldo.
+    const rentang = rentangBulan(periode, bulan);
+    const keluar = rentang
+      ? await db
+          .select()
+          .from(pengeluaran)
+          .where(and(gte(pengeluaran.tanggal, rentang[0]), lt(pengeluaran.tanggal, rentang[1])))
+          .orderBy(asc(pengeluaran.tanggal))
+      : [];
+    const totalMasuk = terbayar.reduce((a, r) => a + r.nominal, 0);
+    const totalKeluar = keluar.reduce((a, r) => a + (r.nominal || 0), 0);
+
     return NextResponse.json({
       periode,
       bulan,
       tahun: tahunKalenderBulan(periode, bulan),
       rows: terbayar,
-      total: terbayar.reduce((a, r) => a + r.nominal, 0),
+      total: totalMasuk,
+      pengeluaran: keluar.map((r) => ({
+        tanggal: r.tanggal,
+        kategori: r.kategori,
+        keterangan: r.keterangan,
+        nominal: r.nominal,
+      })),
+      totalPengeluaran: totalKeluar,
+      saldo: totalMasuk - totalKeluar,
     });
   }
 

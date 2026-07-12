@@ -104,6 +104,25 @@ export const pembayaran = sqliteTable(
   })
 );
 
+// Pengeluaran operasional bulanan (listrik, honor, ATK, dll.) — tidak terikat santri.
+export const pengeluaran = sqliteTable(
+  "Pengeluaran",
+  {
+    id: text("id").primaryKey().$defaultFn(() => createId()),
+    tanggal: integer("tanggal", { mode: "timestamp" }).notNull(),
+    kategori: text("kategori"),
+    keterangan: text("keterangan").notNull(),
+    nominal: integer("nominal").notNull().default(0),
+    createdById: text("createdById").references(() => user.id),
+    createdAt: integer("createdAt", { mode: "timestamp" })
+      .notNull()
+      .$defaultFn(() => new Date()),
+  },
+  (t) => ({
+    tanggalIdx: index("Pengeluaran_tanggal_idx").on(t.tanggal),
+  })
+);
+
 // Relasi untuk query relasional (db.query.*.findMany({ with: ... })).
 export const userRelations = relations(user, ({ many }) => ({
   setoran: many(setoran),
@@ -135,4 +154,8 @@ export const setoranRelations = relations(setoran, ({ one }) => ({
 export const pembayaranRelations = relations(pembayaran, ({ one }) => ({
   santri: one(santri, { fields: [pembayaran.santriId], references: [santri.id] }),
   createdBy: one(user, { fields: [pembayaran.createdById], references: [user.id] }),
+}));
+
+export const pengeluaranRelations = relations(pengeluaran, ({ one }) => ({
+  createdBy: one(user, { fields: [pengeluaran.createdById], references: [user.id] }),
 }));

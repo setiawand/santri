@@ -50,6 +50,15 @@ export function tahunKalenderBulan(periode: string, bulan: string): number | nul
   return idx <= 5 ? awal : akhir;
 }
 
+/** Rentang tanggal kalender [awal, akhir) untuk satu bulan tahun ajaran. */
+export function rentangBulan(periode: string, bulan: string): [Date, Date] | null {
+  const tahun = tahunKalenderBulan(periode, bulan);
+  const idx = BULAN_AJARAN.indexOf(bulan as (typeof BULAN_AJARAN)[number]);
+  if (tahun == null || idx < 0) return null;
+  const bulanKalender = (6 + idx) % 12; // Juli = 6 (0-based)
+  return [new Date(tahun, bulanKalender, 1), new Date(tahun, bulanKalender + 1, 1)];
+}
+
 /** Tahun ajaran berjalan, contoh "2025/2026" (mulai Juli). */
 export function tahunAjaranSekarang(): string {
   const now = new Date();

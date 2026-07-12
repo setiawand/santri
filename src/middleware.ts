@@ -34,6 +34,7 @@ export async function middleware(req: NextRequest) {
     (pathname === "/dashboard" ||
       pathname === "/santri/baru" ||
       pathname === "/laporan" ||
+      pathname === "/pengeluaran" ||
       pathname === "/")
   ) {
     return NextResponse.redirect(new URL("/santri", req.url));

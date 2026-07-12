@@ -12,11 +12,13 @@ import {
   X,
   BookOpenCheck,
   FileText,
+  ReceiptText,
 } from "lucide-react";
 
 const NAV_STAF = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/santri", label: "Data Santri", icon: Users },
+  { href: "/pengeluaran", label: "Pengeluaran", icon: ReceiptText },
   { href: "/laporan", label: "Laporan", icon: FileText },
 ];
 

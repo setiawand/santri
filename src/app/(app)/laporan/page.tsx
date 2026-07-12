@@ -229,8 +229,9 @@ function LaporanPerBulan({ meta }: { meta: Meta | null }) {
             judul="Laporan Pembayaran Iuran"
             sub={[["Periode", `${data.bulan} ${data.tahun ?? ""}`], ["Tahun Ajaran", data.periode]]}
           />
+          <h4 className="font-semibold text-sm text-emerald-800 uppercase tracking-wide mb-2">Pemasukan</h4>
           {data.rows.length === 0 ? (
-            <p className="text-stone-400 text-sm py-8 text-center">Belum ada pembayaran tercatat pada bulan ini.</p>
+            <p className="text-stone-400 text-sm py-6 text-center">Belum ada pembayaran tercatat pada bulan ini.</p>
           ) : (
             <div className="overflow-x-auto scrollbar-thin">
               <table className="w-full text-sm border-collapse">
@@ -258,7 +259,7 @@ function LaporanPerBulan({ meta }: { meta: Meta | null }) {
                 </tbody>
                 <tfoot>
                   <tr className="bg-cream-dark/60 font-semibold text-ink">
-                    <td className={td} colSpan={3}>Total</td>
+                    <td className={td} colSpan={3}>Total Pemasukan</td>
                     <td className={`${td} text-right`}>{formatRupiah(data.total)}</td>
                     <td className={td} colSpan={2} />
                   </tr>
@@ -266,6 +267,59 @@ function LaporanPerBulan({ meta }: { meta: Meta | null }) {
               </table>
             </div>
           )}
+
+          <h4 className="font-semibold text-sm text-emerald-800 uppercase tracking-wide mt-6 mb-2">Pengeluaran</h4>
+          {(data.pengeluaran || []).length === 0 ? (
+            <p className="text-stone-400 text-sm py-6 text-center">Tidak ada pengeluaran tercatat pada bulan ini.</p>
+          ) : (
+            <div className="overflow-x-auto scrollbar-thin">
+              <table className="w-full text-sm border-collapse">
+                <thead>
+                  <tr className="bg-emerald-700 text-cream text-left">
+                    <th className={`${th} w-10`}>No.</th>
+                    <th className={th}>Tanggal</th>
+                    <th className={th}>Kategori</th>
+                    <th className={th}>Keterangan</th>
+                    <th className={`${th} text-right`}>Nominal (Rp)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.pengeluaran.map((r: any, i: number) => (
+                    <tr key={i} className="odd:bg-white even:bg-cream/40">
+                      <td className={`${td} text-stone-500`}>{i + 1}</td>
+                      <td className={td}>{r.tanggal ? formatTanggalSingkat(r.tanggal) : "-"}</td>
+                      <td className={td}>{r.kategori || "-"}</td>
+                      <td className={td}>{r.keterangan}</td>
+                      <td className={`${td} text-right`}>{formatRibuan(r.nominal) || "-"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+                <tfoot>
+                  <tr className="bg-cream-dark/60 font-semibold text-ink">
+                    <td className={td} colSpan={4}>Total Pengeluaran</td>
+                    <td className={`${td} text-right`}>{formatRupiah(data.totalPengeluaran)}</td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          )}
+
+          <div className="mt-6 grid sm:grid-cols-3 gap-3">
+            <div className="rounded-xl border border-cream-dark bg-cream/60 px-4 py-3">
+              <p className="text-xs text-stone-500">Total Pemasukan</p>
+              <p className="font-bold text-ink">{formatRupiah(data.total)}</p>
+            </div>
+            <div className="rounded-xl border border-cream-dark bg-cream/60 px-4 py-3">
+              <p className="text-xs text-stone-500">Total Pengeluaran</p>
+              <p className="font-bold text-ink">{data.totalPengeluaran ? `(${formatRupiah(data.totalPengeluaran)})` : "-"}</p>
+            </div>
+            <div className={`rounded-xl border px-4 py-3 ${data.saldo < 0 ? "border-red-200 bg-red-50" : "border-emerald-100 bg-emerald-50/60"}`}>
+              <p className="text-xs text-stone-500">Saldo Bulan Ini</p>
+              <p className={`font-bold ${data.saldo < 0 ? "text-red-700" : "text-emerald-800"}`}>
+                {data.saldo < 0 ? `- ${formatRupiah(Math.abs(data.saldo))}` : formatRupiah(data.saldo)}
+              </p>
+            </div>
+          </div>
         </div>
       )}
     </div>
