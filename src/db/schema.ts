@@ -86,6 +86,7 @@ export const pembayaran = sqliteTable(
     tanggal: integer("tanggal", { mode: "timestamp" }),
     iuran: integer("iuran").notNull().default(0),
     infaq: integer("infaq").notNull().default(0),
+    metode: text("metode"), // "TUNAI" | "TRANSFER" | "QRIS"
     paraf: integer("paraf", { mode: "boolean" }).notNull().default(false),
     createdById: text("createdById").references(() => user.id),
     updatedAt: integer("updatedAt", { mode: "timestamp" })

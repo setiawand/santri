@@ -11,11 +11,13 @@ import {
   Menu,
   X,
   BookOpenCheck,
+  FileText,
 } from "lucide-react";
 
 const NAV_STAF = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/santri", label: "Data Santri", icon: Users },
+  { href: "/laporan", label: "Laporan", icon: FileText },
 ];
 
 // Orang tua hanya melihat data anaknya sendiri.

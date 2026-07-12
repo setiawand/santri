@@ -28,10 +28,13 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(new URL(home, req.url));
   }
 
-  // Orang tua tidak punya dashboard staf dan tidak bisa mendaftarkan santri.
+  // Orang tua tidak punya dashboard staf, laporan, dan tidak bisa mendaftarkan santri.
   if (
     session.role === "ortu" &&
-    (pathname === "/dashboard" || pathname === "/santri/baru" || pathname === "/")
+    (pathname === "/dashboard" ||
+      pathname === "/santri/baru" ||
+      pathname === "/laporan" ||
+      pathname === "/")
   ) {
     return NextResponse.redirect(new URL("/santri", req.url));
   }

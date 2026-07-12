@@ -101,6 +101,7 @@ async function main() {
         bulan,
         iuran: bulan === "Juli" ? 150000 : 0,
         infaq: bulan === "Juli" ? 20000 : 0,
+        metode: bulan === "Juli" ? "TUNAI" : null,
         paraf: bulan === "Juli",
         tanggal: bulan === "Juli" ? new Date() : null,
       }))

@@ -42,6 +42,14 @@ export function formatTanggalSingkat(d: string | Date | null | undefined): strin
   });
 }
 
+/** Tahun kalender suatu bulan dalam tahun ajaran: ("2026/2027","Juli") -> 2026, ("2026/2027","Januari") -> 2027. */
+export function tahunKalenderBulan(periode: string, bulan: string): number | null {
+  const [awal, akhir] = periode.split("/").map(Number);
+  const idx = BULAN_AJARAN.indexOf(bulan as (typeof BULAN_AJARAN)[number]);
+  if (idx < 0 || isNaN(awal) || isNaN(akhir)) return null;
+  return idx <= 5 ? awal : akhir;
+}
+
 /** Tahun ajaran berjalan, contoh "2025/2026" (mulai Juli). */
 export function tahunAjaranSekarang(): string {
   const now = new Date();
