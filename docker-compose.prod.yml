@@ -1,0 +1,19 @@
+# Compose untuk server produksi (dipakai workflow .github/workflows/deploy.yml).
+# Tidak mem-build di server: image diambil dari GHCR hasil build GitHub Actions.
+# IMAGE_TAG diisi otomatis oleh workflow (sha-xxxxxxx); tanpa itu memakai :latest.
+services:
+  app:
+    image: ghcr.io/setiawand/santri:${IMAGE_TAG:-latest}
+    container_name: sistem-santri
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-3000}:3000"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=file:/app/data/prod.db
+      - AUTH_SECRET=${AUTH_SECRET}
+    volumes:
+      - santri_data:/app/data
+
+volumes:
+  santri_data:
