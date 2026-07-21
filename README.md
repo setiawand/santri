@@ -20,6 +20,8 @@ Mendigitalkan tiga formulir: **Pendaftaran Santri**, **Lembar Setoran Tilawah**,
 | Dashboard | Statistik santri, setoran bulan ini, dan pemasukan |
 | Pembimbing | Setiap santri punya guru pembimbing sendiri |
 | Portal Orang Tua | Orang tua login untuk melihat setoran & pembayaran anaknya, dan membubuhkan paraf ortu |
+| Laporan | Pembayaran per santri, rekap pembayaran per bulan (pemasukan − pengeluaran = saldo), dan daftar santri aktif — siap cetak |
+| Pengeluaran | Pencatatan biaya operasional bulanan (listrik, honor, ATK, dll.) |
 
 > **Buku panduan pengguna** (PDF, lengkap dengan tangkapan layar): [`docs/panduan-pengguna.pdf`](docs/panduan-pengguna.pdf)
 | Login multi-user | Banyak akun admin/guru, sesi aman |

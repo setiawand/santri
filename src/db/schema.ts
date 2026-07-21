@@ -86,6 +86,7 @@ export const pembayaran = sqliteTable(
     tanggal: integer("tanggal", { mode: "timestamp" }),
     iuran: integer("iuran").notNull().default(0),
     infaq: integer("infaq").notNull().default(0),
+    metode: text("metode"), // "TUNAI" | "TRANSFER" | "QRIS"
     paraf: integer("paraf", { mode: "boolean" }).notNull().default(false),
     createdById: text("createdById").references(() => user.id),
     updatedAt: integer("updatedAt", { mode: "timestamp" })
@@ -100,6 +101,25 @@ export const pembayaran = sqliteTable(
       t.periode,
       t.bulan
     ),
+  })
+);
+
+// Pengeluaran operasional bulanan (listrik, honor, ATK, dll.) — tidak terikat santri.
+export const pengeluaran = sqliteTable(
+  "Pengeluaran",
+  {
+    id: text("id").primaryKey().$defaultFn(() => createId()),
+    tanggal: integer("tanggal", { mode: "timestamp" }).notNull(),
+    kategori: text("kategori"),
+    keterangan: text("keterangan").notNull(),
+    nominal: integer("nominal").notNull().default(0),
+    createdById: text("createdById").references(() => user.id),
+    createdAt: integer("createdAt", { mode: "timestamp" })
+      .notNull()
+      .$defaultFn(() => new Date()),
+  },
+  (t) => ({
+    tanggalIdx: index("Pengeluaran_tanggal_idx").on(t.tanggal),
   })
 );
 
@@ -134,4 +154,8 @@ export const setoranRelations = relations(setoran, ({ one }) => ({
 export const pembayaranRelations = relations(pembayaran, ({ one }) => ({
   santri: one(santri, { fields: [pembayaran.santriId], references: [santri.id] }),
   createdBy: one(user, { fields: [pembayaran.createdById], references: [user.id] }),
+}));
+
+export const pengeluaranRelations = relations(pengeluaran, ({ one }) => ({
+  createdBy: one(user, { fields: [pengeluaran.createdById], references: [user.id] }),
 }));

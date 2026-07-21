@@ -10,8 +10,11 @@ interface Bayar {
   tanggal: string | null;
   iuran: number;
   infaq: number;
+  metode: string | null; // "TUNAI" | "TRANSFER" | "QRIS"
   paraf: boolean;
 }
+
+const METODE = ["TUNAI", "TRANSFER", "QRIS"] as const;
 
 export function PembayaranPanel({ santriId, role = "guru" }: { santriId: string; role?: string }) {
   const [rows, setRows] = useState<Bayar[]>([]);
@@ -83,6 +86,7 @@ export function PembayaranPanel({ santriId, role = "guru" }: { santriId: string;
                   <th className="px-3 py-2 font-semibold border border-emerald-800">Tgl Bayar</th>
                   <th className="px-3 py-2 font-semibold border border-emerald-800">Iuran (Rp)</th>
                   <th className="px-3 py-2 font-semibold border border-emerald-800">Infaq (Rp)</th>
+                  <th className="px-3 py-2 font-semibold border border-emerald-800">Metode</th>
                   <th className="px-3 py-2 font-semibold border border-emerald-800 text-center">Lunas</th>
                 </tr>
               </thead>
@@ -98,6 +102,7 @@ export function PembayaranPanel({ santriId, role = "guru" }: { santriId: string;
                         </td>
                         <td className="px-3 py-1.5 border border-cream-dark text-right">{formatRibuan(b.iuran) || "-"}</td>
                         <td className="px-3 py-1.5 border border-cream-dark text-right">{formatRibuan(b.infaq) || "-"}</td>
+                        <td className="px-3 py-1.5 border border-cream-dark">{b.metode || "-"}</td>
                         <td className="px-3 py-1.5 border border-cream-dark text-center">
                           <span
                             className={`h-6 w-6 rounded-full inline-flex items-center justify-center ${
@@ -141,6 +146,20 @@ export function PembayaranPanel({ santriId, role = "guru" }: { santriId: string;
                             onBlur={(e) => save(b.id, { infaq: parseRibuan(e.target.value) })}
                           />
                         </td>
+                        <td className="px-2 py-1 border border-cream-dark">
+                          <select
+                            className="input-field py-1 text-xs"
+                            value={b.metode || ""}
+                            onChange={(e) => {
+                              const metode = e.target.value || null;
+                              setLocal(b.id, { metode });
+                              save(b.id, { metode });
+                            }}
+                          >
+                            <option value="">-</option>
+                            {METODE.map((m) => <option key={m} value={m}>{m}</option>)}
+                          </select>
+                        </td>
                         <td className="px-3 py-1.5 border border-cream-dark text-center">
                           <button
                             onClick={() => { const nv = !b.paraf; setLocal(b.id, { paraf: nv }); save(b.id, { paraf: nv }); }}
@@ -161,7 +180,7 @@ export function PembayaranPanel({ santriId, role = "guru" }: { santriId: string;
                   <td className="px-3 py-2 border border-cream-dark" colSpan={3}>Total</td>
                   <td className="px-3 py-2 border border-cream-dark text-right">{formatRupiah(totalIuran)}</td>
                   <td className="px-3 py-2 border border-cream-dark text-right">{formatRupiah(totalInfaq)}</td>
-                  <td className="px-3 py-2 border border-cream-dark" />
+                  <td className="px-3 py-2 border border-cream-dark" colSpan={2} />
                 </tr>
               </tfoot>
             </table>

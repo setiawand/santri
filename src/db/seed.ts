@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 import { db } from "./index";
-import { user, santri, setoran, pembayaran } from "./schema";
+import { user, santri, setoran, pembayaran, pengeluaran } from "./schema";
 
 const BULAN = [
   "Juli", "Agustus", "September", "Oktober", "November", "Desember",
@@ -101,10 +101,30 @@ async function main() {
         bulan,
         iuran: bulan === "Juli" ? 150000 : 0,
         infaq: bulan === "Juli" ? 20000 : 0,
+        metode: bulan === "Juli" ? "TUNAI" : null,
         paraf: bulan === "Juli",
         tanggal: bulan === "Juli" ? new Date() : null,
       }))
     );
+  }
+
+  const adaPengeluaran = await db.query.pengeluaran.findFirst();
+  if (!adaPengeluaran) {
+    console.log("Menambahkan contoh pengeluaran...");
+    await db.insert(pengeluaran).values([
+      {
+        tanggal: new Date(),
+        kategori: "Listrik & Air",
+        keterangan: "Tagihan listrik bulan berjalan",
+        nominal: 150000,
+      },
+      {
+        tanggal: new Date(),
+        kategori: "ATK & Perlengkapan",
+        keterangan: "Spidol dan buku catatan setoran",
+        nominal: 45000,
+      },
+    ]);
   }
 
   console.log("Seed selesai.");

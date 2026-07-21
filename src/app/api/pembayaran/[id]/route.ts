@@ -18,6 +18,9 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
   if (b.tanggal !== undefined) data.tanggal = b.tanggal ? new Date(b.tanggal) : null;
   if (b.iuran !== undefined) data.iuran = Math.max(0, parseInt(b.iuran, 10) || 0);
   if (b.infaq !== undefined) data.infaq = Math.max(0, parseInt(b.infaq, 10) || 0);
+  if (b.metode !== undefined) {
+    data.metode = ["TUNAI", "TRANSFER", "QRIS"].includes(b.metode) ? b.metode : null;
+  }
   if (b.paraf !== undefined) data.paraf = !!b.paraf;
   const [updated] = await db
     .update(pembayaran)
