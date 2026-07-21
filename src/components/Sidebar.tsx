@@ -7,6 +7,7 @@ import { Logo } from "./Logo";
 import {
   LayoutDashboard,
   Users,
+  UserCog,
   LogOut,
   Menu,
   X,
@@ -15,15 +16,16 @@ import {
   ReceiptText,
 } from "lucide-react";
 
-const NAV_STAF = [
+const NAV_STAF: { href: string; label: string; icon: typeof LayoutDashboard; adminOnly?: boolean }[] = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/santri", label: "Data Santri", icon: Users },
   { href: "/pengeluaran", label: "Pengeluaran", icon: ReceiptText },
   { href: "/laporan", label: "Laporan", icon: FileText },
+  { href: "/pengguna", label: "Pengguna", icon: UserCog, adminOnly: true },
 ];
 
 // Orang tua hanya melihat data anaknya sendiri.
-const NAV_ORTU = [{ href: "/santri", label: "Anak Saya", icon: Users }];
+const NAV_ORTU: typeof NAV_STAF = [{ href: "/santri", label: "Anak Saya", icon: Users }];
 
 const ROLE_LABEL: Record<string, string> = {
   admin: "Admin",
@@ -56,7 +58,7 @@ export function Sidebar({ user }: { user: { nama: string; email: string; role: s
       </div>
 
       <nav className="flex-1 px-3 py-5 space-y-1">
-        {NAV.map((item) => {
+        {NAV.filter((item) => !item.adminOnly || user.role === "admin").map((item) => {
           const active = pathname === item.href || pathname.startsWith(item.href + "/");
           const Icon = item.icon;
           return (

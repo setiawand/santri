@@ -11,3 +11,9 @@ export async function getSession(): Promise<SessionPayload | null> {
 export async function requireSession(): Promise<SessionPayload | null> {
   return getSession();
 }
+
+/** Untuk endpoint khusus admin. Mengembalikan sesi hanya bila role admin, selain itu null. */
+export async function requireAdmin(): Promise<SessionPayload | null> {
+  const session = await getSession();
+  return session?.role === "admin" ? session : null;
+}
