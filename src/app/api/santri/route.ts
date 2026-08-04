@@ -3,7 +3,7 @@ import { and, asc, eq, like, or, sql, getTableColumns } from "drizzle-orm";
 import { db } from "@/db";
 import { santri } from "@/db/schema";
 import { getSession } from "@/lib/session";
-import { isOrtu, isStaff } from "@/lib/authz";
+import { isAdmin, isOrtu } from "@/lib/authz";
 
 export const runtime = "nodejs";
 
@@ -49,8 +49,8 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   const session = await getSession();
-  if (!isStaff(session)) {
-    return NextResponse.json({ error: "Tidak diizinkan" }, { status: 403 });
+  if (!isAdmin(session)) {
+    return NextResponse.json({ error: "Hanya admin yang boleh mendaftarkan santri" }, { status: 403 });
   }
   try {
     const b = await req.json();

@@ -1,4 +1,4 @@
-// Data untuk menu Laporan (khusus staf). Tiga jenis, mengikuti format draft Excel:
+// Data untuk menu Laporan (khusus admin). Tiga jenis, mengikuti format draft Excel:
 // pembayaran-santri (kartu iuran satu santri), rekap-bulan (rekap pembayaran satu
 // bulan), dan santri-aktif (daftar santri aktif beserta ringkasannya).
 import { NextResponse } from "next/server";
@@ -6,7 +6,7 @@ import { and, asc, desc, eq, gte, lt } from "drizzle-orm";
 import { db } from "@/db";
 import { pembayaran, pengeluaran, santri } from "@/db/schema";
 import { getSession } from "@/lib/session";
-import { isStaff } from "@/lib/authz";
+import { isAdmin } from "@/lib/authz";
 import { BULAN_AJARAN, rentangBulan, tahunAjaranSekarang, tahunKalenderBulan } from "@/lib/utils";
 
 export const runtime = "nodejs";
@@ -20,8 +20,8 @@ function sudahBayar(p: { tanggal: Date | null; iuran: number; infaq: number; par
 
 export async function GET(req: Request) {
   const session = await getSession();
-  if (!isStaff(session)) {
-    return NextResponse.json({ error: "Tidak diizinkan" }, { status: 403 });
+  if (!isAdmin(session)) {
+    return NextResponse.json({ error: "Hanya admin yang boleh melihat laporan" }, { status: 403 });
   }
 
   const { searchParams } = new URL(req.url);

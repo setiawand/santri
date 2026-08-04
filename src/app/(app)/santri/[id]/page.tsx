@@ -24,6 +24,8 @@ export default function SantriDetailPage() {
   const [notFound, setNotFound] = useState(false);
   const isOrtu = me?.role === "ortu";
   const isStaf = !!me && !isOrtu;
+  // Edit & hapus data santri hanya untuk admin.
+  const isAdmin = me?.role === "admin";
 
   async function load() {
     const res = await fetch(`/api/santri/${params.id}`);
@@ -85,7 +87,7 @@ export default function SantriDetailPage() {
             <button onClick={() => window.print()} className="btn btn-ghost border-white/30 text-white hover:bg-white/10">
               <Printer size={16} /> Cetak
             </button>
-            {isStaf && (
+            {isAdmin && (
               <>
                 <button onClick={() => setTab("edit")} className="btn btn-gold">
                   <Pencil size={16} /> Edit

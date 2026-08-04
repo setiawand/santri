@@ -19,6 +19,8 @@ interface SantriRow {
 export default function SantriListPage() {
   const me = useMe();
   const isOrtu = me?.role === "ortu";
+  // Pendaftaran santri baru hanya untuk admin.
+  const isAdmin = me?.role === "admin";
   const [santri, setSantri] = useState<SantriRow[]>([]);
   const [q, setQ] = useState("");
   const [loading, setLoading] = useState(true);
@@ -49,7 +51,7 @@ export default function SantriListPage() {
             {isOrtu ? `${santri.length} anak tertaut dengan akun Anda.` : `${santri.length} santri terdaftar.`}
           </p>
         </div>
-        {!isOrtu && (
+        {isAdmin && (
           <Link href="/santri/baru" className="btn btn-primary">
             <Plus size={18} /> Daftarkan Santri
           </Link>

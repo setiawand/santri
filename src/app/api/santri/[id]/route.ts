@@ -3,7 +3,7 @@ import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { santri } from "@/db/schema";
 import { getSession } from "@/lib/session";
-import { canViewSantri, isStaff } from "@/lib/authz";
+import { canViewSantri, isAdmin } from "@/lib/authz";
 
 export const runtime = "nodejs";
 
@@ -33,8 +33,8 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
 
 export async function PUT(req: Request, { params }: { params: { id: string } }) {
   const session = await getSession();
-  if (!isStaff(session)) {
-    return NextResponse.json({ error: "Tidak diizinkan" }, { status: 403 });
+  if (!isAdmin(session)) {
+    return NextResponse.json({ error: "Hanya admin yang boleh mengubah data santri" }, { status: 403 });
   }
   try {
     const b = await req.json();
@@ -73,8 +73,8 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
 
 export async function DELETE(_req: Request, { params }: { params: { id: string } }) {
   const session = await getSession();
-  if (!isStaff(session)) {
-    return NextResponse.json({ error: "Tidak diizinkan" }, { status: 403 });
+  if (!isAdmin(session)) {
+    return NextResponse.json({ error: "Hanya admin yang boleh menghapus santri" }, { status: 403 });
   }
   await db.delete(santri).where(eq(santri.id, params.id));
   return NextResponse.json({ ok: true });

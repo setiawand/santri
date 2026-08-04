@@ -4,6 +4,10 @@ import { db } from "@/db";
 import { santri } from "@/db/schema";
 import type { SessionPayload } from "./jwt";
 
+export function isAdmin(session: SessionPayload | null): boolean {
+  return session?.role === "admin";
+}
+
 export function isStaff(session: SessionPayload | null): boolean {
   return !!session && (session.role === "admin" || session.role === "guru");
 }

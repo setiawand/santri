@@ -28,6 +28,11 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(new URL(home, req.url));
   }
 
+  // Laporan & pendaftaran santri hanya untuk admin; guru diarahkan kembali.
+  if (session.role === "guru" && (pathname === "/laporan" || pathname === "/santri/baru")) {
+    return NextResponse.redirect(new URL("/dashboard", req.url));
+  }
+
   // Orang tua tidak punya dashboard staf, laporan, dan tidak bisa mendaftarkan santri.
   if (
     session.role === "ortu" &&
