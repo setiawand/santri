@@ -25,15 +25,24 @@ const empty = {
   keterangan: "",
 };
 
-export function SetoranPanel({ santriId, role = "guru" }: { santriId: string; role?: string }) {
+export function SetoranPanel({
+  santriId,
+  role = "guru",
+  canEdit: canEditProp,
+}: {
+  santriId: string;
+  role?: string;
+  /** Boleh mengisi/mengubah setoran. Default: semua staf (untuk kompatibilitas). */
+  canEdit?: boolean;
+}) {
   const [list, setList] = useState<Setoran[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState(empty);
   const [saving, setSaving] = useState(false);
-  // Ortu hanya bisa membubuhkan paraf ortu; staf bisa mengelola semuanya.
+  // Ortu hanya bisa membubuhkan paraf ortu; staf mengelola sesuai izin pembimbing.
   const isOrtu = role === "ortu";
-  const canEdit = !isOrtu;
+  const canEdit = canEditProp ?? !isOrtu;
 
   async function load() {
     setLoading(true);
@@ -81,6 +90,11 @@ export function SetoranPanel({ santriId, role = "guru" }: { santriId: string; ro
           <button className="btn btn-gold" onClick={() => setShowForm((v) => !v)}>
             <Plus size={18} /> Tambah Setoran
           </button>
+        )}
+        {!canEdit && !isOrtu && (
+          <p className="text-xs text-stone-400">
+            Hanya pembimbing santri ini (atau admin) yang dapat mengisi setoran.
+          </p>
         )}
       </div>
 

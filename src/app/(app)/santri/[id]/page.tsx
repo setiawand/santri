@@ -131,7 +131,16 @@ export default function SantriDetailPage() {
           }
         />
       )}
-      {tab === "setoran" && <SetoranPanel santriId={params.id} role={me?.role} />}
+      {tab === "setoran" && (
+        <SetoranPanel
+          santriId={params.id}
+          role={me?.role}
+          canEdit={
+            isStaf &&
+            (me!.role === "admin" || !santri.pembimbingId || santri.pembimbing?.id === me!.id)
+          }
+        />
+      )}
       {tab === "pembayaran" && <PembayaranPanel santriId={params.id} role={me?.role} />}
       {tab === "edit" && isStaf && (
         <div>
