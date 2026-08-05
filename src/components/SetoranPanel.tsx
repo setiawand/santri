@@ -56,15 +56,22 @@ export function SetoranPanel({
   async function add(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
-    await fetch("/api/setoran", {
+    const res = await fetch("/api/setoran", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ santriId, ...form }),
     });
+    setSaving(false);
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      alert(data.error || "Gagal menyimpan setoran");
+      return;
+    }
+    // Pakai row dari respons POST langsung — tanpa refetch, tabel tidak berkedip.
+    const data = await res.json();
+    setList((l) => [data.setoran, ...l].sort((a, b) => (a.tanggal < b.tanggal ? 1 : -1)));
     setForm(empty);
     setShowForm(false);
-    setSaving(false);
-    load();
   }
 
   async function toggleParaf(s: Setoran, field: "parafGuru" | "parafOrtu") {
@@ -78,8 +85,8 @@ export function SetoranPanel({
 
   async function hapus(id: string) {
     if (!confirm("Hapus catatan setoran ini?")) return;
-    await fetch(`/api/setoran/${id}`, { method: "DELETE" });
-    load();
+    const res = await fetch(`/api/setoran/${id}`, { method: "DELETE" });
+    if (res.ok) setList((l) => l.filter((x) => x.id !== id));
   }
 
   return (

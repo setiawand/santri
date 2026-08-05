@@ -110,13 +110,6 @@ export default function LoginPage() {
               {loading ? "Memproses..." : "Masuk"}
             </button>
           </form>
-
-          <div className="mt-8 text-xs text-stone-400 bg-cream-dark/50 border border-cream-dark rounded-lg p-3">
-            <p className="font-semibold text-stone-500 mb-1">Akun demo:</p>
-            <p>admin@markazquran.id / admin123</p>
-            <p>guru@markazquran.id / guru123</p>
-            <p>ortu@markazquran.id / ortu123</p>
-          </div>
         </div>
       </div>
     </div>
