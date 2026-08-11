@@ -4,7 +4,7 @@ import { db } from "@/db";
 import { pembayaran } from "@/db/schema";
 import { BULAN_AJARAN, tahunAjaranSekarang } from "@/lib/utils";
 import { getSession } from "@/lib/session";
-import { canViewSantri, isStaff } from "@/lib/authz";
+import { canViewSantri, isAdmin } from "@/lib/authz";
 
 export const runtime = "nodejs";
 
@@ -24,8 +24,8 @@ export async function GET(req: Request) {
     .where(and(eq(pembayaran.santriId, santriId), eq(pembayaran.periode, periode)));
 
   // Auto-generate 12 baris bulan jika periode ini belum ada (satu bulk insert).
-  // Hanya staf yang memicu pembuatan baris; ortu cukup melihat yang sudah ada.
-  if (rows.length === 0 && isStaff(session)) {
+  // Hanya admin yang memicu pembuatan baris; guru/ortu cukup melihat yang sudah ada.
+  if (rows.length === 0 && isAdmin(session)) {
     await db
       .insert(pembayaran)
       .values(BULAN_AJARAN.map((bulan) => ({ santriId, periode, bulan })));

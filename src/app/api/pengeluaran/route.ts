@@ -1,17 +1,17 @@
-// Pencatatan pengeluaran operasional bulanan (khusus staf).
+// Pencatatan pengeluaran operasional bulanan (khusus admin).
 import { NextResponse } from "next/server";
 import { and, asc, gte, lt } from "drizzle-orm";
 import { db } from "@/db";
 import { pengeluaran } from "@/db/schema";
 import { getSession } from "@/lib/session";
-import { isStaff } from "@/lib/authz";
+import { isAdmin } from "@/lib/authz";
 import { BULAN_AJARAN, rentangBulan, tahunAjaranSekarang, tahunKalenderBulan } from "@/lib/utils";
 
 export const runtime = "nodejs";
 
 export async function GET(req: Request) {
   const session = await getSession();
-  if (!isStaff(session)) {
+  if (!isAdmin(session)) {
     return NextResponse.json({ error: "Tidak diizinkan" }, { status: 403 });
   }
   const { searchParams } = new URL(req.url);
@@ -37,7 +37,7 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   const session = await getSession();
-  if (!isStaff(session)) {
+  if (!isAdmin(session)) {
     return NextResponse.json({ error: "Tidak diizinkan" }, { status: 403 });
   }
   try {

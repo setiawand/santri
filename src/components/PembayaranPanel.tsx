@@ -21,8 +21,8 @@ export function PembayaranPanel({ santriId, role = "guru" }: { santriId: string;
   const [periode, setPeriode] = useState<string>("");
   const [periodeList, setPeriodeList] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
-  // Ortu hanya melihat kartu pembayaran anaknya, tanpa bisa mengubah.
-  const readOnly = role === "ortu";
+  // Hanya admin yang boleh mengubah pembayaran; guru dan ortu hanya melihat.
+  const readOnly = role !== "admin";
 
   async function load(p?: string) {
     setLoading(true);

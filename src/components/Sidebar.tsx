@@ -19,7 +19,7 @@ import {
 const NAV_STAF: { href: string; label: string; icon: typeof LayoutDashboard; adminOnly?: boolean }[] = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/santri", label: "Data Santri", icon: Users },
-  { href: "/pengeluaran", label: "Pengeluaran", icon: ReceiptText },
+  { href: "/pengeluaran", label: "Pengeluaran", icon: ReceiptText, adminOnly: true },
   { href: "/laporan", label: "Laporan", icon: FileText, adminOnly: true },
   { href: "/pengguna", label: "Pengguna", icon: UserCog, adminOnly: true },
 ];

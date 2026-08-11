@@ -3,13 +3,13 @@ import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { pengeluaran } from "@/db/schema";
 import { getSession } from "@/lib/session";
-import { isStaff } from "@/lib/authz";
+import { isAdmin } from "@/lib/authz";
 
 export const runtime = "nodejs";
 
 export async function PATCH(req: Request, { params }: { params: { id: string } }) {
   const session = await getSession();
-  if (!isStaff(session)) {
+  if (!isAdmin(session)) {
     return NextResponse.json({ error: "Tidak diizinkan" }, { status: 403 });
   }
   const b = await req.json();
@@ -37,7 +37,7 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
 
 export async function DELETE(_req: Request, { params }: { params: { id: string } }) {
   const session = await getSession();
-  if (!isStaff(session)) {
+  if (!isAdmin(session)) {
     return NextResponse.json({ error: "Tidak diizinkan" }, { status: 403 });
   }
   await db.delete(pengeluaran).where(eq(pengeluaran.id, params.id));

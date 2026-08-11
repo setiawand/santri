@@ -28,8 +28,11 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(new URL(home, req.url));
   }
 
-  // Laporan & pendaftaran santri hanya untuk admin; guru diarahkan kembali.
-  if (session.role === "guru" && (pathname === "/laporan" || pathname === "/santri/baru")) {
+  // Laporan, pengeluaran & pendaftaran santri hanya untuk admin; guru diarahkan kembali.
+  if (
+    session.role === "guru" &&
+    (pathname === "/laporan" || pathname === "/pengeluaran" || pathname === "/santri/baru")
+  ) {
     return NextResponse.redirect(new URL("/dashboard", req.url));
   }
 
