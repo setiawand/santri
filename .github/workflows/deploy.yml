@@ -23,6 +23,22 @@ env:
   IMAGE: ghcr.io/${{ github.repository }}
 
 jobs:
+  audit:
+    name: Audit keamanan dependency (npm audit)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      # Non-blocking dulu: masih ada beberapa kerentanan lama (next, drizzle-orm) yang
+      # perlu upgrade terpisah. Setelah semuanya beres, hapus "|| true" agar deploy
+      # otomatis gagal saat ada kerentanan high/critical baru.
+      - name: npm audit (high & critical)
+        run: npm audit --omit=dev --audit-level=high || true
+
   build:
     name: Build & push image ke GHCR
     runs-on: ubuntu-latest

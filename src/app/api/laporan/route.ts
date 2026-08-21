@@ -74,31 +74,38 @@ export async function GET(req: Request) {
     });
   }
 
-  // Sheet 2: REKAP PEMBY. PER BULAN — semua santri yang membayar pada bulan tsb.
+  // Sheet 2: REKAP PEMBY. PER BULAN — semua pembayaran yang DITERIMA (berdasarkan
+  // tanggal bayar) pada bulan kalender tsb, apa pun bulan iuran yang dilunasi.
+  // Contoh: iuran Juli yang baru dibayar bulan Agustus masuk pendapatan Agustus.
   if (jenis === "rekap-bulan") {
     const periode = searchParams.get("periode") || tahunAjaranSekarang();
     const bulan = searchParams.get("bulan") || BULAN_AJARAN[0];
+    const rentang = rentangBulan(periode, bulan);
 
-    const rows = await db
-      .select({
-        nama: santri.nama,
-        nis: santri.nis,
-        tanggal: pembayaran.tanggal,
-        iuran: pembayaran.iuran,
-        infaq: pembayaran.infaq,
-        metode: pembayaran.metode,
-        paraf: pembayaran.paraf,
-      })
-      .from(pembayaran)
-      .innerJoin(santri, eq(pembayaran.santriId, santri.id))
-      .where(and(eq(pembayaran.periode, periode), eq(pembayaran.bulan, bulan)))
-      .orderBy(asc(pembayaran.tanggal), asc(santri.nama));
+    const rows = rentang
+      ? await db
+          .select({
+            nama: santri.nama,
+            nis: santri.nis,
+            bulanIuran: pembayaran.bulan,
+            tanggal: pembayaran.tanggal,
+            iuran: pembayaran.iuran,
+            infaq: pembayaran.infaq,
+            metode: pembayaran.metode,
+            paraf: pembayaran.paraf,
+          })
+          .from(pembayaran)
+          .innerJoin(santri, eq(pembayaran.santriId, santri.id))
+          .where(and(gte(pembayaran.tanggal, rentang[0]), lt(pembayaran.tanggal, rentang[1])))
+          .orderBy(asc(pembayaran.tanggal), asc(santri.nama))
+      : [];
 
     const terbayar = rows
       .filter(sudahBayar)
       .map((r) => ({
         nama: r.nama,
         nis: r.nis,
+        bulanIuran: r.bulanIuran,
         tanggal: r.tanggal,
         nominal: nominal(r),
         metode: r.metode,
@@ -106,7 +113,6 @@ export async function GET(req: Request) {
       }));
 
     // Pengeluaran pada bulan kalender yang sama, untuk ringkasan saldo.
-    const rentang = rentangBulan(periode, bulan);
     const keluar = rentang
       ? await db
           .select()

@@ -240,6 +240,7 @@ function LaporanPerBulan({ meta }: { meta: Meta | null }) {
                     <th className={`${th} w-10`}>No.</th>
                     <th className={th}>Nama</th>
                     <th className={th}>Tgl. Bayar</th>
+                    <th className={th}>Bulan Iuran</th>
                     <th className={`${th} text-right`}>Nominal (Rp)</th>
                     <th className={th}>Keterangan</th>
                     <th className={`${th} text-center`}>Lunas</th>
@@ -251,6 +252,7 @@ function LaporanPerBulan({ meta }: { meta: Meta | null }) {
                       <td className={`${td} text-stone-500`}>{i + 1}</td>
                       <td className={`${td} font-medium text-ink`}>{r.nama}</td>
                       <td className={td}>{r.tanggal ? formatTanggalSingkat(r.tanggal) : "-"}</td>
+                      <td className={td}>{r.bulanIuran || "-"}</td>
                       <td className={`${td} text-right`}>{formatRibuan(r.nominal) || "-"}</td>
                       <td className={td}>{r.metode || "-"}</td>
                       <td className={`${td} text-center`}><LunasBadge lunas={r.lunas} /></td>
@@ -259,7 +261,7 @@ function LaporanPerBulan({ meta }: { meta: Meta | null }) {
                 </tbody>
                 <tfoot>
                   <tr className="bg-cream-dark/60 font-semibold text-ink">
-                    <td className={td} colSpan={3}>Total Pemasukan</td>
+                    <td className={td} colSpan={4}>Total Pemasukan</td>
                     <td className={`${td} text-right`}>{formatRupiah(data.total)}</td>
                     <td className={td} colSpan={2} />
                   </tr>

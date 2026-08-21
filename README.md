@@ -31,8 +31,13 @@ Mendigitalkan tiga formulir: **Pendaftaran Santri**, **Lembar Setoran Tilawah**,
 Butuh **Node.js 18.18+** (disarankan Node 20).
 
 ```bash
-# 1. Install dependency
+# 1. Install dependency (script preinstall/postinstall paket dimatikan lewat .npmrc
+#    demi keamanan — lihat bagian "Keamanan Dependency npm" di bawah)
 npm install
+
+# 1b. Build ulang binding native better-sqlite3 (satu-satunya paket yang butuh script,
+#     jadi dijalankan manual, bukan otomatis)
+npm run setup:native
 
 # 2. Siapkan environment (sudah ada .env default untuk SQLite)
 cp .env.example .env
@@ -58,6 +63,26 @@ Buka http://localhost:3000
 | Orang Tua | `ortu@markazquran.id` | `ortu123` |
 
 > Ganti kata sandi & `AUTH_SECRET` sebelum dipakai sungguhan.
+
+## Keamanan Dependency npm
+
+Proyek ini mematikan lifecycle script npm (`preinstall`/`install`/`postinstall`) secara
+default lewat `.npmrc` (`ignore-scripts=true`), untuk mitigasi serangan supply-chain npm
+yang menyebar lewat script tsb saat `npm install` (mis. worm "Shai-Hulud" / "ChainDrop").
+
+Konsekuensinya:
+
+- Setelah `npm install` / `npm ci`, jalankan `npm run setup:native` sekali untuk
+  membangun ulang binding native `better-sqlite3` (satu-satunya paket yang butuh
+  script). Dockerfile sudah melakukan ini otomatis di tahap build image.
+- Kalau menambah paket baru yang juga butuh install script (jarang, tapi mungkin),
+  jalankan build-nya secara manual dengan `npm rebuild <paket> --ignore-scripts=false`
+  alih-alih menghapus `ignore-scripts=true` dari `.npmrc`.
+- Sebelum menambah dependency baru: cek dulu aktivitas & reputasinya, dan pertimbangkan
+  tunggu beberapa hari setelah rilis versi baru sebelum ikut update (paket berbahaya
+  biasanya ketahuan & ditarik npm dalam hitungan jam–hari).
+- Jalankan `npm audit` secara berkala (ada juga sebagai job non-blocking di CI, lihat
+  `.github/workflows/deploy.yml`) untuk memantau kerentanan yang sudah diketahui.
 
 ## Deploy ke Produksi
 
