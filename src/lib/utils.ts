@@ -59,6 +59,16 @@ export function rentangBulan(periode: string, bulan: string): [Date, Date] | nul
   return [new Date(tahun, bulanKalender, 1), new Date(tahun, bulanKalender + 1, 1)];
 }
 
+/** Pasangan periode/bulan tepat sebelum yang diberikan, contoh ("2026/2027","Juli") -> ("2025/2026","Juni"). */
+export function bulanSebelumnya(periode: string, bulan: string): { periode: string; bulan: string } | null {
+  const idx = BULAN_AJARAN.indexOf(bulan as (typeof BULAN_AJARAN)[number]);
+  if (idx < 0) return null;
+  if (idx > 0) return { periode, bulan: BULAN_AJARAN[idx - 1] };
+  const [awal, akhir] = periode.split("/").map(Number);
+  if (isNaN(awal) || isNaN(akhir)) return null;
+  return { periode: `${awal - 1}/${akhir - 1}`, bulan: BULAN_AJARAN[11] };
+}
+
 /** Tahun ajaran berjalan, contoh "2025/2026" (mulai Juli). */
 export function tahunAjaranSekarang(): string {
   const now = new Date();

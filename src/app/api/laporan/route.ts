@@ -4,10 +4,10 @@
 import { NextResponse } from "next/server";
 import { and, asc, desc, eq, gte, lt } from "drizzle-orm";
 import { db } from "@/db";
-import { pembayaran, pengeluaran, santri } from "@/db/schema";
+import { pembayaran, pemasukanLain, pengeluaran, saldoAwal, santri } from "@/db/schema";
 import { getSession } from "@/lib/session";
 import { isAdmin } from "@/lib/authz";
-import { BULAN_AJARAN, rentangBulan, tahunAjaranSekarang, tahunKalenderBulan } from "@/lib/utils";
+import { BULAN_AJARAN, bulanSebelumnya, rentangBulan, tahunAjaranSekarang, tahunKalenderBulan } from "@/lib/utils";
 
 export const runtime = "nodejs";
 
@@ -16,6 +16,52 @@ function nominal(p: { iuran: number; infaq: number }) {
 }
 function sudahBayar(p: { tanggal: Date | null; iuran: number; infaq: number; paraf: boolean }) {
   return !!p.tanggal || nominal(p) > 0 || p.paraf;
+}
+
+/** Total pemasukan iuran, pemasukan lain, dan pengeluaran pada satu bulan kalender. */
+async function totalsBulan(periode: string, bulan: string) {
+  const rentang = rentangBulan(periode, bulan);
+  if (!rentang) return { masuk: 0, lain: 0, keluar: 0 };
+
+  const bayar = await db
+    .select({ tanggal: pembayaran.tanggal, iuran: pembayaran.iuran, infaq: pembayaran.infaq, paraf: pembayaran.paraf })
+    .from(pembayaran)
+    .where(and(gte(pembayaran.tanggal, rentang[0]), lt(pembayaran.tanggal, rentang[1])));
+  const masuk = bayar.filter(sudahBayar).reduce((a, r) => a + nominal(r), 0);
+
+  const lainRows = await db
+    .select({ nominal: pemasukanLain.nominal })
+    .from(pemasukanLain)
+    .where(and(gte(pemasukanLain.tanggal, rentang[0]), lt(pemasukanLain.tanggal, rentang[1])));
+  const lain = lainRows.reduce((a, r) => a + (r.nominal || 0), 0);
+
+  const keluarRows = await db
+    .select({ nominal: pengeluaran.nominal })
+    .from(pengeluaran)
+    .where(and(gte(pengeluaran.tanggal, rentang[0]), lt(pengeluaran.tanggal, rentang[1])));
+  const keluar = keluarRows.reduce((a, r) => a + (r.nominal || 0), 0);
+
+  return { masuk, lain, keluar };
+}
+
+/**
+ * Saldo awal suatu bulan: pakai override manual jika ada, kalau tidak dihitung
+ * otomatis dari saldo akhir bulan kalender sebelumnya (rekursif). Dibatasi 60
+ * bulan mundur agar tidak berjalan tanpa henti jika tidak pernah ada override.
+ */
+async function saldoAwalBulan(periode: string, bulan: string, depth = 0): Promise<{ nominal: number; manual: boolean }> {
+  const override = await db.query.saldoAwal.findFirst({
+    where: and(eq(saldoAwal.periode, periode), eq(saldoAwal.bulan, bulan)),
+  });
+  if (override) return { nominal: override.nominal, manual: true };
+  if (depth >= 60) return { nominal: 0, manual: false };
+
+  const prev = bulanSebelumnya(periode, bulan);
+  if (!prev) return { nominal: 0, manual: false };
+
+  const awalPrev = await saldoAwalBulan(prev.periode, prev.bulan, depth + 1);
+  const t = await totalsBulan(prev.periode, prev.bulan);
+  return { nominal: awalPrev.nominal + t.masuk + t.lain - t.keluar, manual: false };
 }
 
 export async function GET(req: Request) {
@@ -112,7 +158,14 @@ export async function GET(req: Request) {
         lunas: r.paraf,
       }));
 
-    // Pengeluaran pada bulan kalender yang sama, untuk ringkasan saldo.
+    // Pemasukan lain & pengeluaran pada bulan kalender yang sama, untuk ringkasan saldo.
+    const lain = rentang
+      ? await db
+          .select()
+          .from(pemasukanLain)
+          .where(and(gte(pemasukanLain.tanggal, rentang[0]), lt(pemasukanLain.tanggal, rentang[1])))
+          .orderBy(asc(pemasukanLain.tanggal))
+      : [];
     const keluar = rentang
       ? await db
           .select()
@@ -121,7 +174,9 @@ export async function GET(req: Request) {
           .orderBy(asc(pengeluaran.tanggal))
       : [];
     const totalMasuk = terbayar.reduce((a, r) => a + r.nominal, 0);
+    const totalLain = lain.reduce((a, r) => a + (r.nominal || 0), 0);
     const totalKeluar = keluar.reduce((a, r) => a + (r.nominal || 0), 0);
+    const awal = await saldoAwalBulan(periode, bulan);
 
     return NextResponse.json({
       periode,
@@ -129,6 +184,13 @@ export async function GET(req: Request) {
       tahun: tahunKalenderBulan(periode, bulan),
       rows: terbayar,
       total: totalMasuk,
+      pemasukanLain: lain.map((r) => ({
+        tanggal: r.tanggal,
+        kategori: r.kategori,
+        keterangan: r.keterangan,
+        nominal: r.nominal,
+      })),
+      totalPemasukanLain: totalLain,
       pengeluaran: keluar.map((r) => ({
         tanggal: r.tanggal,
         kategori: r.kategori,
@@ -136,7 +198,9 @@ export async function GET(req: Request) {
         nominal: r.nominal,
       })),
       totalPengeluaran: totalKeluar,
-      saldo: totalMasuk - totalKeluar,
+      saldoAwal: awal.nominal,
+      saldoAwalManual: awal.manual,
+      saldoAkhir: awal.nominal + totalMasuk + totalLain - totalKeluar,
     });
   }
 

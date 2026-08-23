@@ -123,6 +123,46 @@ export const pengeluaran = sqliteTable(
   })
 );
 
+// Pemasukan operasional lain-lain (pendaftaran santri baru, penjualan buku, dll.) —
+// tidak terikat santri, terpisah dari iuran bulanan (Pembayaran).
+export const pemasukanLain = sqliteTable(
+  "PemasukanLain",
+  {
+    id: text("id").primaryKey().$defaultFn(() => createId()),
+    tanggal: integer("tanggal", { mode: "timestamp" }).notNull(),
+    kategori: text("kategori"),
+    keterangan: text("keterangan").notNull(),
+    nominal: integer("nominal").notNull().default(0),
+    createdById: text("createdById").references(() => user.id),
+    createdAt: integer("createdAt", { mode: "timestamp" })
+      .notNull()
+      .$defaultFn(() => new Date()),
+  },
+  (t) => ({
+    tanggalIdx: index("PemasukanLain_tanggal_idx").on(t.tanggal),
+  })
+);
+
+// Saldo awal manual (titik mulai carry-over) untuk bulan tertentu. Bulan tanpa baris
+// di sini menghitung saldo awalnya otomatis dari saldo akhir bulan kalender sebelumnya.
+export const saldoAwal = sqliteTable(
+  "SaldoAwal",
+  {
+    id: text("id").primaryKey().$defaultFn(() => createId()),
+    periode: text("periode").notNull(),
+    bulan: text("bulan").notNull(),
+    nominal: integer("nominal").notNull().default(0),
+    createdById: text("createdById").references(() => user.id),
+    updatedAt: integer("updatedAt", { mode: "timestamp" })
+      .notNull()
+      .$defaultFn(() => new Date())
+      .$onUpdate(() => new Date()),
+  },
+  (t) => ({
+    uniqByBulan: uniqueIndex("SaldoAwal_periode_bulan_key").on(t.periode, t.bulan),
+  })
+);
+
 // Relasi untuk query relasional (db.query.*.findMany({ with: ... })).
 export const userRelations = relations(user, ({ many }) => ({
   setoran: many(setoran),
@@ -158,4 +198,12 @@ export const pembayaranRelations = relations(pembayaran, ({ one }) => ({
 
 export const pengeluaranRelations = relations(pengeluaran, ({ one }) => ({
   createdBy: one(user, { fields: [pengeluaran.createdById], references: [user.id] }),
+}));
+
+export const pemasukanLainRelations = relations(pemasukanLain, ({ one }) => ({
+  createdBy: one(user, { fields: [pemasukanLain.createdById], references: [user.id] }),
+}));
+
+export const saldoAwalRelations = relations(saldoAwal, ({ one }) => ({
+  createdBy: one(user, { fields: [saldoAwal.createdById], references: [user.id] }),
 }));

@@ -191,18 +191,45 @@ function LaporanPerBulan({ meta }: { meta: Meta | null }) {
   const [bulan, setBulan] = useState("Juli");
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+  const [editSaldoAwal, setEditSaldoAwal] = useState(false);
+  const [saldoAwalInput, setSaldoAwalInput] = useState(0);
+  const [savingSaldoAwal, setSavingSaldoAwal] = useState(false);
 
   useEffect(() => {
     if (!periode && meta?.periodeList.length) setPeriode(meta.periodeList[0]);
   }, [meta]);
-  useEffect(() => {
+
+  function load() {
     if (!periode) return;
     setLoading(true);
     fetch(`/api/laporan?jenis=rekap-bulan&periode=${encodeURIComponent(periode)}&bulan=${encodeURIComponent(bulan)}`)
       .then((r) => r.json())
-      .then(setData)
+      .then((d) => { setData(d); setEditSaldoAwal(false); })
       .finally(() => setLoading(false));
-  }, [periode, bulan]);
+  }
+  useEffect(load, [periode, bulan]);
+
+  async function simpanSaldoAwal() {
+    setSavingSaldoAwal(true);
+    await fetch("/api/saldo-awal", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ periode, bulan, nominal: saldoAwalInput }),
+    });
+    setSavingSaldoAwal(false);
+    load();
+  }
+
+  async function resetSaldoAwal() {
+    setSavingSaldoAwal(true);
+    await fetch("/api/saldo-awal", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ periode, bulan, nominal: null }),
+    });
+    setSavingSaldoAwal(false);
+    load();
+  }
 
   return (
     <div>
@@ -270,6 +297,42 @@ function LaporanPerBulan({ meta }: { meta: Meta | null }) {
             </div>
           )}
 
+          <h4 className="font-semibold text-sm text-emerald-800 uppercase tracking-wide mt-6 mb-2">Pemasukan Lain</h4>
+          {(data.pemasukanLain || []).length === 0 ? (
+            <p className="text-stone-400 text-sm py-6 text-center">Tidak ada pemasukan lain tercatat pada bulan ini.</p>
+          ) : (
+            <div className="overflow-x-auto scrollbar-thin">
+              <table className="w-full text-sm border-collapse">
+                <thead>
+                  <tr className="bg-emerald-700 text-cream text-left">
+                    <th className={`${th} w-10`}>No.</th>
+                    <th className={th}>Tanggal</th>
+                    <th className={th}>Kategori</th>
+                    <th className={th}>Keterangan</th>
+                    <th className={`${th} text-right`}>Nominal (Rp)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.pemasukanLain.map((r: any, i: number) => (
+                    <tr key={i} className="odd:bg-white even:bg-cream/40">
+                      <td className={`${td} text-stone-500`}>{i + 1}</td>
+                      <td className={td}>{r.tanggal ? formatTanggalSingkat(r.tanggal) : "-"}</td>
+                      <td className={td}>{r.kategori || "-"}</td>
+                      <td className={td}>{r.keterangan}</td>
+                      <td className={`${td} text-right`}>{formatRibuan(r.nominal) || "-"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+                <tfoot>
+                  <tr className="bg-cream-dark/60 font-semibold text-ink">
+                    <td className={td} colSpan={4}>Total Pemasukan Lain</td>
+                    <td className={`${td} text-right`}>{formatRupiah(data.totalPemasukanLain)}</td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          )}
+
           <h4 className="font-semibold text-sm text-emerald-800 uppercase tracking-wide mt-6 mb-2">Pengeluaran</h4>
           {(data.pengeluaran || []).length === 0 ? (
             <p className="text-stone-400 text-sm py-6 text-center">Tidak ada pengeluaran tercatat pada bulan ini.</p>
@@ -307,18 +370,55 @@ function LaporanPerBulan({ meta }: { meta: Meta | null }) {
           )}
 
           <div className="mt-6 grid sm:grid-cols-3 gap-3">
+            <div className="rounded-xl border border-cream-dark bg-cream/60 px-4 py-3 no-print">
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-xs text-stone-500">
+                  Saldo Awal {data.saldoAwalManual ? <span className="text-amber-600">(manual)</span> : <span className="text-stone-400">(otomatis)</span>}
+                </p>
+                {!editSaldoAwal && (
+                  <button
+                    className="text-xs text-emerald-700 hover:underline"
+                    onClick={() => { setSaldoAwalInput(data.saldoAwal); setEditSaldoAwal(true); }}
+                  >
+                    Ubah
+                  </button>
+                )}
+              </div>
+              {editSaldoAwal ? (
+                <div className="mt-1 flex items-center gap-2">
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    className="input-field text-right py-1"
+                    value={formatRibuan(saldoAwalInput)}
+                    onChange={(e) => setSaldoAwalInput(parseInt(e.target.value.replace(/\D/g, ""), 10) || 0)}
+                  />
+                  <button className="btn btn-primary px-2 py-1 text-xs" disabled={savingSaldoAwal} onClick={simpanSaldoAwal}>Simpan</button>
+                  <button className="btn btn-ghost px-2 py-1 text-xs" onClick={() => setEditSaldoAwal(false)}>Batal</button>
+                </div>
+              ) : (
+                <>
+                  <p className="font-bold text-ink">{formatRupiah(data.saldoAwal)}</p>
+                  {data.saldoAwalManual && (
+                    <button className="text-xs text-stone-400 hover:text-red-500 mt-1" disabled={savingSaldoAwal} onClick={resetSaldoAwal}>
+                      Kembalikan ke otomatis
+                    </button>
+                  )}
+                </>
+              )}
+            </div>
             <div className="rounded-xl border border-cream-dark bg-cream/60 px-4 py-3">
               <p className="text-xs text-stone-500">Total Pemasukan</p>
-              <p className="font-bold text-ink">{formatRupiah(data.total)}</p>
+              <p className="font-bold text-ink">{formatRupiah(data.total + (data.totalPemasukanLain || 0))}</p>
             </div>
             <div className="rounded-xl border border-cream-dark bg-cream/60 px-4 py-3">
               <p className="text-xs text-stone-500">Total Pengeluaran</p>
               <p className="font-bold text-ink">{data.totalPengeluaran ? `(${formatRupiah(data.totalPengeluaran)})` : "-"}</p>
             </div>
-            <div className={`rounded-xl border px-4 py-3 ${data.saldo < 0 ? "border-red-200 bg-red-50" : "border-emerald-100 bg-emerald-50/60"}`}>
-              <p className="text-xs text-stone-500">Saldo Bulan Ini</p>
-              <p className={`font-bold ${data.saldo < 0 ? "text-red-700" : "text-emerald-800"}`}>
-                {data.saldo < 0 ? `- ${formatRupiah(Math.abs(data.saldo))}` : formatRupiah(data.saldo)}
+            <div className={`rounded-xl border px-4 py-3 sm:col-span-3 ${data.saldoAkhir < 0 ? "border-red-200 bg-red-50" : "border-emerald-100 bg-emerald-50/60"}`}>
+              <p className="text-xs text-stone-500">Saldo Akhir</p>
+              <p className={`font-bold text-lg ${data.saldoAkhir < 0 ? "text-red-700" : "text-emerald-800"}`}>
+                {data.saldoAkhir < 0 ? `- ${formatRupiah(Math.abs(data.saldoAkhir))}` : formatRupiah(data.saldoAkhir)}
               </p>
             </div>
           </div>
