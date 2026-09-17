@@ -6,7 +6,7 @@ import { and, asc, desc, eq, gte, lt } from "drizzle-orm";
 import { db } from "@/db";
 import { pembayaran, pemasukanLain, pengeluaran, saldoAwal, santri } from "@/db/schema";
 import { getSession } from "@/lib/session";
-import { isAdmin } from "@/lib/authz";
+import { canViewLaporan } from "@/lib/authz";
 import { BULAN_AJARAN, bulanSebelumnya, rentangBulan, tahunAjaranSekarang, tahunKalenderBulan } from "@/lib/utils";
 
 export const runtime = "nodejs";
@@ -66,8 +66,8 @@ async function saldoAwalBulan(periode: string, bulan: string, depth = 0): Promis
 
 export async function GET(req: Request) {
   const session = await getSession();
-  if (!isAdmin(session)) {
-    return NextResponse.json({ error: "Hanya admin yang boleh melihat laporan" }, { status: 403 });
+  if (!canViewLaporan(session)) {
+    return NextResponse.json({ error: "Tidak diizinkan melihat laporan" }, { status: 403 });
   }
 
   const { searchParams } = new URL(req.url);
@@ -83,6 +83,17 @@ export async function GET(req: Request) {
     const sekarang = tahunAjaranSekarang();
     if (!periodeList.includes(sekarang)) periodeList.unshift(sekarang);
     return NextResponse.json({ periodeList, bulanList: BULAN_AJARAN });
+  }
+
+  // Daftar santri ringkas (nama & NIS saja) untuk memilih santri di Sheet 1 —
+  // dipisah dari /api/santri (yang berisi data pribadi lengkap) agar pengurus
+  // tetap bisa memakai laporan ini tanpa melihat data pribadi santri/orang tua.
+  if (jenis === "santri-ringkas") {
+    const rows = await db.query.santri.findMany({
+      orderBy: (t, { asc }) => [asc(t.nama)],
+      columns: { id: true, nama: true, nis: true },
+    });
+    return NextResponse.json({ santri: rows });
   }
 
   // Sheet 1: LAP. PEMBY PER SANTRI — 12 bulan untuk satu santri.

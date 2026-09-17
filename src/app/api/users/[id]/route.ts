@@ -7,7 +7,7 @@ import { hashPassword } from "@/lib/password";
 
 export const runtime = "nodejs";
 
-const ROLES = ["admin", "guru"] as const;
+const ROLES = ["admin", "guru", "pengurus"] as const;
 
 async function countAdmin(): Promise<number> {
   const [row] = await db
@@ -62,7 +62,7 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
           { status: 400 }
         );
       }
-      if (target.role === "admin" && role === "guru") {
+      if (target.role === "admin" && role !== "admin") {
         if (target.id === session.uid) {
           return NextResponse.json(
             { error: "Tidak bisa menurunkan role akun sendiri" },

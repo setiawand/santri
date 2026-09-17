@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { asc, ne, sql } from "drizzle-orm";
+import { and, asc, ne, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { user } from "@/db/schema";
 import { getSession, requireAdmin } from "@/lib/session";
@@ -10,7 +10,7 @@ export const runtime = "nodejs";
 
 // Role yang bisa dikelola dari halaman manajemen pengguna.
 // Akun "ortu" dibuat lewat halaman detail santri, bukan dari sini.
-const ROLES = ["admin", "guru"] as const;
+const ROLES = ["admin", "guru", "pengurus"] as const;
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
@@ -43,7 +43,7 @@ export async function GET(req: Request) {
     return NextResponse.json({ users: result });
   }
 
-  // Mode ringkas — daftar staf untuk pilihan pembimbing santri, boleh diakses guru.
+  // Mode ringkas — daftar staf pengajar untuk pilihan pembimbing santri, boleh diakses guru.
   const session = await getSession();
   if (!isStaff(session)) {
     return NextResponse.json({ error: "Tidak diizinkan" }, { status: 403 });
@@ -51,7 +51,7 @@ export async function GET(req: Request) {
   const rows = await db
     .select({ id: user.id, nama: user.nama, role: user.role })
     .from(user)
-    .where(ne(user.role, "ortu"))
+    .where(and(ne(user.role, "ortu"), ne(user.role, "pengurus")))
     .orderBy(asc(user.nama));
   return NextResponse.json({ users: rows });
 }

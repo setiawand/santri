@@ -144,12 +144,18 @@ export function UserPanel({ currentUserId }: { currentUserId: string }) {
                         className={`text-xs px-2 py-0.5 rounded-full font-medium ${
                           u.role === "admin"
                             ? "bg-gold/15 text-gold-dark"
-                            : u.role === "ortu"
+                            : u.role === "ortu" || u.role === "pengurus"
                               ? "bg-stone-100 text-stone-500"
                               : "bg-emerald-50 text-emerald-700"
                         }`}
                       >
-                        {u.role === "ortu" ? "Orang Tua" : u.role === "admin" ? "Admin" : "Guru"}
+                        {u.role === "ortu"
+                          ? "Orang Tua"
+                          : u.role === "admin"
+                            ? "Admin"
+                            : u.role === "pengurus"
+                              ? "Pengurus"
+                              : "Guru"}
                       </span>
                     </td>
                     <td className="px-4 py-3 text-center text-stone-500">{u._count.setoran}</td>
@@ -244,6 +250,7 @@ export function UserPanel({ currentUserId }: { currentUserId: string }) {
                 >
                   <option value="guru">Guru</option>
                   <option value="admin">Admin</option>
+                  <option value="pengurus">Pengurus (lihat laporan saja)</option>
                   {modal.mode === "edit" && modal.target?.role === "ortu" && (
                     <option value="ortu">Orang Tua</option>
                   )}

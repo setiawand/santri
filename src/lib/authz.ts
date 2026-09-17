@@ -1,4 +1,5 @@
-// Helper otorisasi berbasis role. Role: "admin" | "guru" (staf) | "ortu" (orang tua).
+// Helper otorisasi berbasis role.
+// Role: "admin" | "guru" (staf) | "ortu" (orang tua) | "pengurus" (lihat laporan saja).
 import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { santri } from "@/db/schema";
@@ -14,6 +15,15 @@ export function isStaff(session: SessionPayload | null): boolean {
 
 export function isOrtu(session: SessionPayload | null): boolean {
   return session?.role === "ortu";
+}
+
+export function isPengurus(session: SessionPayload | null): boolean {
+  return session?.role === "pengurus";
+}
+
+/** Boleh melihat laporan (read-only): admin selalu boleh, pengurus juga boleh. */
+export function canViewLaporan(session: SessionPayload | null): boolean {
+  return isAdmin(session) || isPengurus(session);
 }
 
 /** Apakah user ortu ini orang tua dari santri tersebut. */

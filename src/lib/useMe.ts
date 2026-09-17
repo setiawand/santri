@@ -6,7 +6,7 @@ export interface Me {
   id: string;
   nama: string;
   email: string;
-  role: string; // "admin" | "guru" | "ortu"
+  role: string; // "admin" | "guru" | "ortu" | "pengurus"
 }
 
 /** Info user yang sedang login (dari /api/auth/me). null selama memuat. */

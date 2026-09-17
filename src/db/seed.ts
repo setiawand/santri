@@ -45,6 +45,17 @@ async function main() {
     })
     .onConflictDoNothing({ target: user.email });
 
+  const pengurusPass = await bcrypt.hash("pengurus123", 10);
+  await db
+    .insert(user)
+    .values({
+      nama: "Pengurus Yayasan",
+      email: "pengurus@markazquran.id",
+      password: pengurusPass,
+      role: "pengurus",
+    })
+    .onConflictDoNothing({ target: user.email });
+
   const guruUser = await db.query.user.findFirst({
     where: eq(user.email, "guru@markazquran.id"),
   });
@@ -131,6 +142,7 @@ async function main() {
   console.log("Login admin : admin@markazquran.id / admin123");
   console.log("Login guru  : guru@markazquran.id / guru123");
   console.log("Login ortu  : ortu@markazquran.id / ortu123");
+  console.log("Login pengurus : pengurus@markazquran.id / pengurus123");
 }
 
 main().catch((e) => {
