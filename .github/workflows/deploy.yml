@@ -91,6 +91,7 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
           port: ${{ secrets.SSH_PORT || 22 }}
+          debug: true
           source: docker-compose.prod.yml
           target: ${{ secrets.APP_DIR || '/opt/santri' }}
 
