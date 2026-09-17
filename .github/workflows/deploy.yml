@@ -1,10 +1,9 @@
-# Deploy otomatis: build image di GitHub Actions -> push ke GHCR -> server tinggal pull.
+# Deploy otomatis: build image di GitHub Actions -> push ke GHCR -> runner
+# self-hosted di server sendiri yang pull & restart (tidak lewat SSH dari luar,
+# lihat catatan di README kenapa: IP GitHub-hosted runner sering ditolak
+# jaringan IDCloudHost meskipun key/config sudah benar).
 #
 # Secrets yang harus diisi (Settings -> Secrets and variables -> Actions):
-#   SSH_HOST  : alamat IP / domain server
-#   SSH_USER  : user SSH di server (harus bisa menjalankan docker)
-#   SSH_KEY   : private key SSH (isi lengkap file key, format OpenSSH)
-#   SSH_PORT  : (opsional) port SSH, bawaan 22
 #   APP_DIR   : (opsional) folder aplikasi di server, bawaan /opt/santri
 #
 # Persiapan server satu kali: lihat bagian "Deploy Otomatis dari GitHub" di README.md.
@@ -78,64 +77,47 @@ jobs:
 
   deploy:
     name: Deploy ke server
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     needs: build
     environment: production
+    env:
+      APP_DIR: ${{ secrets.APP_DIR || '/opt/santri' }}
+      IMAGE_TAG: ${{ needs.build.outputs.tag }}
     steps:
       - uses: actions/checkout@v4
 
-      - name: Salin docker-compose.prod.yml ke server
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_KEY }}
-          port: ${{ secrets.SSH_PORT || 22 }}
-          source: docker-compose.prod.yml
-          target: ${{ secrets.APP_DIR || '/opt/santri' }}
+      - name: Salin docker-compose.prod.yml ke folder aplikasi
+        run: cp docker-compose.prod.yml "$APP_DIR/"
 
       - name: Pull image & restart aplikasi
-        uses: appleboy/ssh-action@v1.2.0
-        env:
-          APP_DIR: ${{ secrets.APP_DIR || '/opt/santri' }}
-          IMAGE_TAG: ${{ needs.build.outputs.tag }}
-          GHCR_USER: ${{ github.actor }}
-          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_KEY }}
-          port: ${{ secrets.SSH_PORT || 22 }}
-          envs: APP_DIR,IMAGE_TAG,GHCR_USER,GHCR_TOKEN
-          script: |
-            set -e
-            cd "$APP_DIR"
+        run: |
+          set -e
+          cd "$APP_DIR"
 
-            if [ ! -f .env ]; then
-              echo "ERROR: file .env belum ada di $APP_DIR."
-              echo "Buat dulu (minimal berisi AUTH_SECRET) — lihat README bagian Deploy Otomatis."
-              exit 1
-            fi
-
-            # GITHUB_TOKEN hanya berlaku selama workflow berjalan — cukup untuk pull saat ini.
-            echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
-
-            export IMAGE_TAG
-            docker compose -f docker-compose.prod.yml pull
-            docker compose -f docker-compose.prod.yml up -d
-            docker image prune -f > /dev/null
-
-            # Tunggu aplikasi merespons (boot pertama menjalankan inisialisasi database).
-            PORT=$(grep -E '^APP_PORT=' .env | tail -n1 | cut -d= -f2 | tr -d '"' | tr -d "'")
-            PORT=${PORT:-3000}
-            for i in $(seq 1 12); do
-              if curl -fsS "http://localhost:$PORT/login" > /dev/null 2>&1; then
-                echo "OK: aplikasi hidup di port $PORT (versi $IMAGE_TAG)"
-                exit 0
-              fi
-              sleep 5
-            done
-
-            echo "GAGAL: aplikasi tidak merespons di port $PORT. Log terakhir:"
-            docker compose -f docker-compose.prod.yml logs --tail 50 app
+          if [ ! -f .env ]; then
+            echo "ERROR: file .env belum ada di $APP_DIR."
+            echo "Buat dulu (minimal berisi AUTH_SECRET) — lihat README bagian Deploy Otomatis."
             exit 1
+          fi
+
+          # GITHUB_TOKEN hanya berlaku selama workflow berjalan — cukup untuk pull saat ini.
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+
+          docker compose -f docker-compose.prod.yml pull
+          docker compose -f docker-compose.prod.yml up -d
+          docker image prune -f > /dev/null
+
+          # Tunggu aplikasi merespons (boot pertama menjalankan inisialisasi database).
+          PORT=$(grep -E '^APP_PORT=' .env | tail -n1 | cut -d= -f2 | tr -d '"' | tr -d "'")
+          PORT=${PORT:-3000}
+          for i in $(seq 1 12); do
+            if curl -fsS "http://localhost:$PORT/login" > /dev/null 2>&1; then
+              echo "OK: aplikasi hidup di port $PORT (versi $IMAGE_TAG)"
+              exit 0
+            fi
+            sleep 5
+          done
+
+          echo "GAGAL: aplikasi tidak merespons di port $PORT. Log terakhir:"
+          docker compose -f docker-compose.prod.yml logs --tail 50 app
+          exit 1
