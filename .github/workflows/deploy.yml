@@ -84,6 +84,23 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: DEBUG - diagnosa koneksi SSH
+        env:
+          SSH_KEY_CONTENT: ${{ secrets.SSH_KEY }}
+          TARGET_HOST: ${{ secrets.SSH_HOST }}
+          TARGET_USER: ${{ secrets.SSH_USER }}
+        run: |
+          echo "=== IP keluar runner ini ==="
+          curl -s https://ifconfig.me; echo
+          echo "=== Raw TCP connect ke port 22 ==="
+          (echo > /dev/tcp/$TARGET_HOST/22) 2>&1 && echo "TCP CONNECT OK" || echo "TCP CONNECT GAGAL"
+          echo "=== SSH -vvv langsung (bypass action) ==="
+          umask 077
+          echo "$SSH_KEY_CONTENT" > /tmp/dk
+          chmod 600 /tmp/dk
+          ssh -vvv -i /tmp/dk -o StrictHostKeyChecking=no -o BatchMode=yes -o ConnectTimeout=10 "$TARGET_USER@$TARGET_HOST" 'echo REMOTE_OK' || true
+          rm -f /tmp/dk
+
       - name: Salin docker-compose.prod.yml ke server
         uses: appleboy/scp-action@v0.1.7
         with:
