@@ -97,15 +97,24 @@ Aplikasi memakai **SQLite via `better-sqlite3`**, yang butuh filesystem permanen
 ## Deploy Otomatis dari GitHub (CI/CD)
 
 Setiap push ke branch `main` otomatis di-deploy ke server lewat GitHub Actions
-(`.github/workflows/deploy.yml`): image Docker dibangun di GitHub, didorong ke
-**GitHub Container Registry (GHCR)**, lalu server tinggal `docker pull` + restart —
-server tidak pernah mem-build sendiri.
+(`.github/workflows/deploy.yml`): image Docker dibangun di job `build` (GitHub-hosted
+runner) dan didorong ke **GitHub Container Registry (GHCR)**; job `deploy` lalu
+`docker pull` + restart di server — server tidak pernah mem-build sendiri.
+
+Job `deploy` berjalan di **self-hosted runner yang terpasang di server itu sendiri**
+(bukan lewat SSH dari runner GitHub-hosted). Ini disengaja: beberapa penyedia VPS
+(termasuk yang dipakai proyek ini) memblokir koneksi SSH dari IP milik penyedia cloud
+besar seperti Azure — tempat GitHub-hosted runner berjalan — meskipun SSH key & konfigurasi
+sudah benar, sehingga deploy via SSH dari runner GitHub-hosted gagal terus-menerus tanpa
+sebab yang bisa diperbaiki dari sisi server. Runner self-hosted menghindari masalah itu sama
+sekali karena job jalan langsung di server.
 
 ### Persiapan server (sekali saja)
 
 ```bash
-# 1. Pastikan Docker (dengan plugin compose) terpasang
+# 1. Pastikan Docker (dengan plugin compose) terpasang, dan user deploy masuk grup docker
 curl -fsSL https://get.docker.com | sh
+sudo usermod -aG docker "$USER"   # lalu re-login agar grup berlaku
 
 # 2. Buat folder aplikasi + file .env
 sudo mkdir -p /opt/santri && cd /opt/santri
@@ -115,25 +124,26 @@ APP_PORT=3000
 ENV
 ```
 
-Buat pula sepasang kunci SSH khusus deploy, lalu daftarkan public key-nya ke
-`~/.ssh/authorized_keys` user server:
+Lalu pasang **self-hosted runner**: buka repo di GitHub → **Settings → Actions →
+Runners → New self-hosted runner**, pilih OS/arch server, dan ikuti perintah `config.sh`
+yang ditampilkan (jalankan sebagai user yang sama dengan langkah 1 di atas). Setelah
+`config.sh` selesai, install sebagai service supaya otomatis jalan lagi setelah reboot:
 
 ```bash
-ssh-keygen -t ed25519 -f deploy_key -N "" -C "github-actions-deploy"
-cat deploy_key.pub >> ~/.ssh/authorized_keys
+cd actions-runner
+sudo ./svc.sh install "$USER"
+sudo ./svc.sh start
 ```
+
+Beri label `self-hosted` (bawaan) — workflow menargetkan job `deploy` ke `runs-on: self-hosted`.
 
 ### Persiapan repo GitHub (sekali saja)
 
-Di **Settings → Secrets and variables → Actions**, tambahkan:
+Di **Settings → Secrets and variables → Actions**, tambahkan (opsional, ada default):
 
 | Secret | Isi |
 |--------|-----|
-| `SSH_HOST` | IP / domain server |
-| `SSH_USER` | user SSH (harus bisa menjalankan `docker`) |
-| `SSH_KEY`  | isi lengkap file *private key* `deploy_key` |
-| `SSH_PORT` | (opsional) port SSH selain 22 |
-| `APP_DIR`  | (opsional) folder aplikasi selain `/opt/santri` |
+| `APP_DIR` | (opsional) folder aplikasi selain `/opt/santri` |
 
 ### Cara pakai
 
