@@ -50,7 +50,7 @@ export default function LaporanPage() {
 
   useEffect(() => {
     fetch("/api/laporan?jenis=meta").then((r) => r.json()).then(setMeta).catch(() => {});
-    fetch("/api/santri")
+    fetch("/api/laporan?jenis=santri-ringkas")
       .then((r) => r.json())
       .then((d) => setSantriList(d.santri || []))
       .catch(() => {});
@@ -370,14 +370,12 @@ function LaporanPerBulan({ meta }: { meta: Meta | null }) {
           )}
 
           <div className="mt-6 grid sm:grid-cols-3 gap-3">
-            <div className="rounded-xl border border-cream-dark bg-cream/60 px-4 py-3 no-print">
+            <div className="rounded-xl border border-cream-dark bg-cream/60 px-4 py-3">
               <div className="flex items-center justify-between gap-2">
-                <p className="text-xs text-stone-500">
-                  Saldo Awal {data.saldoAwalManual ? <span className="text-amber-600">(manual)</span> : <span className="text-stone-400">(otomatis)</span>}
-                </p>
+                <p className="text-xs text-stone-500">Saldo Awal</p>
                 {!editSaldoAwal && (
                   <button
-                    className="text-xs text-emerald-700 hover:underline"
+                    className="text-xs text-emerald-700 hover:underline no-print"
                     onClick={() => { setSaldoAwalInput(data.saldoAwal); setEditSaldoAwal(true); }}
                   >
                     Ubah
@@ -385,7 +383,7 @@ function LaporanPerBulan({ meta }: { meta: Meta | null }) {
                 )}
               </div>
               {editSaldoAwal ? (
-                <div className="mt-1 flex items-center gap-2">
+                <div className="mt-1 flex items-center gap-2 no-print">
                   <input
                     type="text"
                     inputMode="numeric"
@@ -400,7 +398,7 @@ function LaporanPerBulan({ meta }: { meta: Meta | null }) {
                 <>
                   <p className="font-bold text-ink">{formatRupiah(data.saldoAwal)}</p>
                   {data.saldoAwalManual && (
-                    <button className="text-xs text-stone-400 hover:text-red-500 mt-1" disabled={savingSaldoAwal} onClick={resetSaldoAwal}>
+                    <button className="text-xs text-stone-400 hover:text-red-500 mt-1 no-print" disabled={savingSaldoAwal} onClick={resetSaldoAwal}>
                       Kembalikan ke otomatis
                     </button>
                   )}

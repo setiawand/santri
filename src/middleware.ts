@@ -24,7 +24,7 @@ export async function middleware(req: NextRequest) {
 
   // Sudah login tapi membuka halaman login -> arahkan ke halaman utama sesuai role.
   if (isLoginPage) {
-    const home = session.role === "ortu" ? "/santri" : "/dashboard";
+    const home = session.role === "ortu" ? "/santri" : session.role === "pengurus" ? "/laporan" : "/dashboard";
     return NextResponse.redirect(new URL(home, req.url));
   }
 
@@ -46,6 +46,11 @@ export async function middleware(req: NextRequest) {
       pathname === "/")
   ) {
     return NextResponse.redirect(new URL("/santri", req.url));
+  }
+
+  // Pengurus hanya boleh membuka halaman Laporan (API tetap diizinkan, dijaga per-endpoint).
+  if (session.role === "pengurus" && !pathname.startsWith("/api/") && pathname !== "/laporan") {
+    return NextResponse.redirect(new URL("/laporan", req.url));
   }
 
   return NextResponse.next();

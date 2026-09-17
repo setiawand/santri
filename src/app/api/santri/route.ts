@@ -3,7 +3,7 @@ import { and, asc, eq, like, or, sql, getTableColumns } from "drizzle-orm";
 import { db } from "@/db";
 import { santri } from "@/db/schema";
 import { getSession } from "@/lib/session";
-import { isAdmin, isOrtu } from "@/lib/authz";
+import { isAdmin, isOrtu, isStaff } from "@/lib/authz";
 
 export const runtime = "nodejs";
 
@@ -15,6 +15,9 @@ function parseTanggal(v: unknown): Date | null {
 
 export async function GET(req: Request) {
   const session = await getSession();
+  if (!isStaff(session) && !isOrtu(session)) {
+    return NextResponse.json({ error: "Tidak diizinkan" }, { status: 403 });
+  }
   const { searchParams } = new URL(req.url);
   const q = searchParams.get("q")?.trim();
 

@@ -28,8 +28,9 @@ export default function LoginPage() {
         setLoading(false);
         return;
       }
-      // Orang tua langsung diarahkan ke halaman anaknya, staf ke dashboard.
-      router.replace(data.user?.role === "ortu" ? "/santri" : "/dashboard");
+      // Orang tua ke halaman anaknya, pengurus ke laporan, staf lain ke dashboard.
+      const role = data.user?.role;
+      router.replace(role === "ortu" ? "/santri" : role === "pengurus" ? "/laporan" : "/dashboard");
       router.refresh();
     } catch {
       setError("Tidak dapat terhubung ke server");

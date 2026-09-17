@@ -27,17 +27,21 @@ const NAV_STAF: { href: string; label: string; icon: typeof LayoutDashboard; adm
 // Orang tua hanya melihat data anaknya sendiri.
 const NAV_ORTU: typeof NAV_STAF = [{ href: "/santri", label: "Anak Saya", icon: Users }];
 
+// Pengurus hanya melihat laporan.
+const NAV_PENGURUS: typeof NAV_STAF = [{ href: "/laporan", label: "Laporan", icon: FileText }];
+
 const ROLE_LABEL: Record<string, string> = {
   admin: "Admin",
   guru: "Guru",
   ortu: "Orang Tua",
+  pengurus: "Pengurus",
 };
 
 export function Sidebar({ user }: { user: { nama: string; email: string; role: string } }) {
   const pathname = usePathname();
   const router = useRouter();
   const [open, setOpen] = useState(false);
-  const NAV = user.role === "ortu" ? NAV_ORTU : NAV_STAF;
+  const NAV = user.role === "ortu" ? NAV_ORTU : user.role === "pengurus" ? NAV_PENGURUS : NAV_STAF;
 
   async function logout() {
     await fetch("/api/auth/logout", { method: "POST" });

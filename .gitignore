@@ -8,6 +8,7 @@ dev.db-wal
 drizzle/
 .DS_Store
 next-env.d.ts
+tsconfig.tsbuildinfo
 
 # Folder sementara sisa file yang perlu dihapus manual
 _to_delete/

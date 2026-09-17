@@ -9,7 +9,7 @@ export const user = sqliteTable("User", {
   nama: text("nama").notNull(),
   email: text("email").notNull().unique(),
   password: text("password").notNull(),
-  role: text("role").notNull().default("guru"), // "admin" | "guru" | "ortu"
+  role: text("role").notNull().default("guru"), // "admin" | "guru" | "ortu" | "pengurus"
   createdAt: integer("createdAt", { mode: "timestamp" })
     .notNull()
     .$defaultFn(() => new Date()),
